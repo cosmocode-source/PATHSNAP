@@ -1,0 +1,59 @@
+{
+  "model": "Shallow MLP",
+  "family": "Neural network",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "table": "scaled",
+  "features": [
+    "dist_m",
+    "frac",
+    "dist_to_start_m",
+    "dist_to_end_m",
+    "log_arc_len",
+    "rank",
+    "dist_minus_nearest",
+    "n_candidates",
+    "is_nearest",
+    "arc_bearing",
+    "heading_sin",
+    "heading_cos",
+    "heading_valid",
+    "is_reverse_twin",
+    "speed_mps",
+    "after_gap",
+    "stationary",
+    "d_prev_m",
+    "d_next_m",
+    "mean_dist_win_m",
+    "arc_in_deg",
+    "arc_out_deg"
+  ],
+  "n_features": 22,
+  "loss_function": "sample-weighted binary cross-entropy (Adam, weight decay 1e-5)",
+  "fit_rows": "train rows with fit_include == True (other CV folds during CV, all folds for the final model)",
+  "cv": "5-fold GroupKFold by trip_id, fold ids stored by preprocessing (cleaned_data/model_data/folds.csv)",
+  "evaluation": "unweighted; ALL points headline, CLEAN points diagnostic; student-test evaluation only",
+  "hyperparameters": {
+    "architecture": "22 -> 64 (ReLU) -> dropout 0.1 -> 1 logit",
+    "hidden_units": 64,
+    "dropout": 0.1,
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "weight_decay": 1e-05,
+    "batch_size": 4096,
+    "max_epochs": 40,
+    "patience": 5,
+    "early_stop_val_share": 0.2,
+    "refit_on_all_rows": false,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "torch_threads": 16,
+    "sample_weight": "clean 1.0 / ambiguous 0.5 / far 0.3 (in the loss, train and validation)"
+  }
+}

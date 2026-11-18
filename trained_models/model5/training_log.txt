@@ -1,0 +1,27 @@
+2026-11-18 15:30:36  === Shallow MLP (Neural network) | seeds [42, 43, 44] | table scaled ===
+2026-11-18 15:30:36  python 3.12.6 on Windows-11-10.0.26200-SP0
+2026-11-18 15:30:37  [train] 208,417 points, 1,943,052 candidate rows, miss rate 0.1037, fit_include rows 1,814,286
+2026-11-18 15:30:37  [student] 19,160 points, 207,713 candidate rows, miss rate 0.0015, fit_include rows 207,713
+2026-11-18 15:32:23  seed 42 fold 0: fit   105.1s  rows 1,443,750  top1_all 0.8411  top1_in_cands 0.8456  macroF1 0.9124  ll_raw 0.0944  ll_norm 0.4869
+2026-11-18 15:33:04  seed 42 fold 1: fit    40.1s  rows 1,368,322  top1_all 0.8923  top1_in_cands 0.8940  macroF1 0.9394  ll_raw 0.0749  ll_norm 0.3336
+2026-11-18 15:33:55  seed 42 fold 2: fit    50.3s  rows 1,457,100  top1_all 0.5591  top1_in_cands 0.8318  macroF1 0.8166  ll_raw 0.1202  ll_norm 0.5426
+2026-11-18 15:35:08  seed 42 fold 3: fit    72.8s  rows 1,520,044  top1_all 0.7698  top1_in_cands 0.8617  macroF1 0.8965  ll_raw 0.0878  ll_norm 0.4920
+2026-11-18 15:36:10  seed 42 fold 4: fit    61.4s  rows 1,467,928  top1_all 0.8036  top1_in_cands 0.8229  macroF1 0.8975  ll_raw 0.0850  ll_norm 0.5284
+2026-11-18 15:37:03  seed 42 final fit: 49.0s on 1,814,286 rows
+2026-11-18 15:37:06  seed 42 student: top1_all 0.8600  macroF1 0.9233  ll_norm 0.4079  continuity 0.7607  inference 3.8 ms / 1,000 points
+2026-11-18 15:38:03  seed 43 fold 0: fit    56.4s  rows 1,443,750  top1_all 0.8318  top1_in_cands 0.8362  macroF1 0.9072  ll_raw 0.1058  ll_norm 0.5446
+2026-11-18 15:38:53  seed 43 fold 1: fit    50.2s  rows 1,368,322  top1_all 0.9040  top1_in_cands 0.9057  macroF1 0.9461  ll_raw 0.0690  ll_norm 0.3108
+2026-11-18 15:39:55  seed 43 fold 2: fit    61.6s  rows 1,457,100  top1_all 0.5584  top1_in_cands 0.8307  macroF1 0.8162  ll_raw 0.1339  ll_norm 0.5184
+2026-11-18 15:40:41  seed 43 fold 3: fit    45.0s  rows 1,520,044  top1_all 0.7725  top1_in_cands 0.8648  macroF1 0.8982  ll_raw 0.0854  ll_norm 0.4952
+2026-11-18 15:41:44  seed 43 fold 4: fit    62.8s  rows 1,467,928  top1_all 0.7974  top1_in_cands 0.8166  macroF1 0.8941  ll_raw 0.0849  ll_norm 0.5262
+2026-11-18 15:43:20  seed 43 final fit: 92.5s on 1,814,286 rows
+2026-11-18 15:43:27  seed 43 student: top1_all 0.8574  macroF1 0.9218  ll_norm 0.4101  continuity 0.7584  inference 3.7 ms / 1,000 points
+2026-11-18 15:44:54  seed 44 fold 0: fit    86.3s  rows 1,443,750  top1_all 0.8321  top1_in_cands 0.8365  macroF1 0.9074  ll_raw 0.1041  ll_norm 0.5426
+2026-11-18 15:45:29  seed 44 fold 1: fit    34.4s  rows 1,368,322  top1_all 0.8972  top1_in_cands 0.8989  macroF1 0.9422  ll_raw 0.0750  ll_norm 0.3383
+2026-11-18 15:46:36  seed 44 fold 2: fit    66.9s  rows 1,457,100  top1_all 0.5598  top1_in_cands 0.8328  macroF1 0.8171  ll_raw 0.1254  ll_norm 0.5097
+2026-11-18 15:48:01  seed 44 fold 3: fit    84.9s  rows 1,520,044  top1_all 0.7749  top1_in_cands 0.8675  macroF1 0.8996  ll_raw 0.0823  ll_norm 0.4768
+2026-11-18 15:48:55  seed 44 fold 4: fit    53.1s  rows 1,467,928  top1_all 0.8072  top1_in_cands 0.8267  macroF1 0.8996  ll_raw 0.0850  ll_norm 0.5296
+2026-11-18 15:50:12  seed 44 final fit: 73.6s on 1,814,286 rows
+2026-11-18 15:50:14  seed 44 student: top1_all 0.8606  macroF1 0.9236  ll_norm 0.4047  continuity 0.7584  inference 3.1 ms / 1,000 points
+2026-11-18 15:50:15  CV top1_all 0.7734 +/- 0.1286 | student top1_all 0.8593 | total 1178.0s
+2026-11-18 15:50:15  outputs written to C:\Users\shiva\PATHSNAP\trained_models\model5
