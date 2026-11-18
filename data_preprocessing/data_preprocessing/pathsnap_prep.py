@@ -70,6 +70,13 @@ CONFIG = {
     "cand_max_per_point": 50,         # cap (nearest kept): ~p99 of the uncapped train count distribution (46); truncates <1% of points.
     "cand_query_chunk_points": 4000,  # GPS points per spatial query (memory guard for ~300k-arc trips).
     "cand_study_radii_m": [15, 20, 30, 50, 100],   # radii compared in the miss-rate study.
+    # ---- features (4.5) ------------------------------------------------------------
+    "heading_half_window": 2,         # heading = direction of travel over fixes i-2 .. i+2 (smooths 4-5 m GPS noise).
+    "heading_min_disp_m": 5.0,        # below this displacement over the window (~GPS noise) the heading is meaningless.
+    "temporal_half_window": 3,        # +/-3 fixes (7 s at 1 Hz) for the mean distance of neighbouring fixes to the same arc.
+    # ---- scaling / folds (4.6) -----------------------------------------------------
+    "n_folds": 5,                     # group-aware CV folds (by trip_id).
+    "winsor_low_q": 0.01, "winsor_high_q": 0.99,   # winsorisation bounds learned on TRAIN only.
     # ---- paths -------------------------------------------------------------------
     "chunk_cells": 2_000_000,         # max (points x route arcs) cells per distance chunk (memory guard).
 }
@@ -153,27 +160,15 @@ def assert_index_spaces(trip: Trip) -> None:
     assert np.all(trip.arc_len >= 0)
 
 
-def load_trip(data_dir: Path, split: str, trip_id: str, cache_dir: Path | None = None) -> Trip:
-    """Load one trip, project to UTM metres and derive arc geometry. Never reads .route.
+def trip_from_arrays(trip_id: str, split: str, track, nodes, arcs) -> Trip:
+    """Build a Trip from raw arrays (no files, no route). Used by the file loader AND by the API.
 
     Args:
-        data_dir: folder holding the partitions (``Dataset``).
-        split: 'train' or 'student_test' (the evaluator partition must never be passed here by us).
-        trip_id: e.g. '00000001'.
-        cache_dir: optional folder for a ``.npz`` cache of the projected arrays.
+        track: (N,3) lon, lat, t (DataFrame or array-like).  nodes: (V,2) lon, lat.  arcs: (A,2) from_node, to_node.
     """
-    cache = (cache_dir / f"{split}_{trip_id}.npz") if cache_dir else None
-    if cache is not None and cache.exists():
-        z = np.load(cache)
-        return Trip(trip_id, split, int(z["epsg"]), z["gps_lonlat"], z["gps_t"], z["gps_xy"], z["node_xy"],
-                    z["arcs"], z["arc_a"], z["arc_b"], z["arc_len"], z["arc_bearing"], z["node_in_deg"],
-                    z["node_out_deg"], z["arc_has_reverse"])
-
-    d = data_dir / split / trip_id
-    track = _read_ws(d / f"{trip_id}.track", ["lon", "lat", "t"], {"lon": "float64", "lat": "float64", "t": "float64"})
-    nodes = _read_ws(d / f"{trip_id}.nodes", ["lon", "lat"], {"lon": "float64", "lat": "float64"})
-    arcs = _read_ws(d / f"{trip_id}.arcs", ["u", "v"], {"u": "int64", "v": "int64"})
-
+    track = pd.DataFrame(np.asarray(track, dtype="float64")[:, :3], columns=["lon", "lat", "t"])
+    nodes = pd.DataFrame(np.asarray(nodes, dtype="float64")[:, :2], columns=["lon", "lat"])
+    arcs = pd.DataFrame(np.asarray(arcs, dtype="int64")[:, :2], columns=["u", "v"])
     # One UTM zone per trip, chosen from the GPS centroid (the trip is local).
     epsg = utm_epsg(float(track.lon.mean()), float(track.lat.mean()))
     tf = Transformer.from_crs(4326, epsg, always_xy=True)  # always_xy => (lon, lat) order
@@ -198,11 +193,36 @@ def load_trip(data_dir: Path, split: str, trip_id: str, cache_dir: Path | None =
     trip = Trip(trip_id, split, epsg, track[["lon", "lat"]].to_numpy(), track.t.to_numpy(), gps_xy, node_xy,
                 arcs_np, arc_a, arc_b, arc_len, arc_bearing, node_in, node_out, has_rev)
     assert_index_spaces(trip)
+    return trip
+
+
+def load_trip(data_dir: Path, split: str, trip_id: str, cache_dir: Path | None = None) -> Trip:
+    """Load one trip, project to UTM metres and derive arc geometry. Never reads .route.
+
+    Args:
+        data_dir: folder holding the partitions (``Dataset``).
+        split: 'train' or 'student_test' (the evaluator partition must never be passed here by us).
+        trip_id: e.g. '00000001'.
+        cache_dir: optional folder for a ``.npz`` cache of the projected arrays.
+    """
+    cache = (cache_dir / f"{split}_{trip_id}.npz") if cache_dir else None
+    if cache is not None and cache.exists():
+        z = np.load(cache)
+        return Trip(trip_id, split, int(z["epsg"]), z["gps_lonlat"], z["gps_t"], z["gps_xy"], z["node_xy"],
+                    z["arcs"], z["arc_a"], z["arc_b"], z["arc_len"], z["arc_bearing"], z["node_in_deg"],
+                    z["node_out_deg"], z["arc_has_reverse"])
+
+    d = data_dir / split / trip_id
+    track = _read_ws(d / f"{trip_id}.track", ["lon", "lat", "t"], {"lon": "float64", "lat": "float64", "t": "float64"})
+    nodes = _read_ws(d / f"{trip_id}.nodes", ["lon", "lat"], {"lon": "float64", "lat": "float64"})
+    arcs = _read_ws(d / f"{trip_id}.arcs", ["u", "v"], {"u": "int64", "v": "int64"})
+
+    trip = trip_from_arrays(trip_id, split, track, nodes, arcs)
     if cache is not None:
         cache_dir.mkdir(parents=True, exist_ok=True)
-        np.savez(cache, epsg=epsg, gps_lonlat=trip.gps_lonlat, gps_t=trip.gps_t, gps_xy=gps_xy, node_xy=node_xy,
-                 arcs=arcs_np, arc_a=arc_a, arc_b=arc_b, arc_len=arc_len, arc_bearing=arc_bearing,
-                 node_in_deg=node_in, node_out_deg=node_out, arc_has_reverse=has_rev)
+        np.savez(cache, epsg=trip.epsg, gps_lonlat=trip.gps_lonlat, gps_t=trip.gps_t, gps_xy=trip.gps_xy, node_xy=trip.node_xy,
+                 arcs=trip.arcs, arc_a=trip.arc_a, arc_b=trip.arc_b, arc_len=trip.arc_len, arc_bearing=trip.arc_bearing,
+                 node_in_deg=trip.node_in_deg, node_out_deg=trip.node_out_deg, arc_has_reverse=trip.arc_has_reverse)
     return trip
 
 
@@ -510,3 +530,168 @@ def generate_candidates(trip: Trip, rows: np.ndarray | None = None, cfg: dict = 
     points = pd.DataFrame({"gps_row": rows, "n_candidates": n_c, "candidate_source": source})
     assert (n_c >= 1).all(), "every GPS point must have at least one candidate"
     return pairs, points
+
+
+# --------------------------------------------------------------------------------------
+# 4.5 Features per (point, candidate arc)  --  ROUTE-FREE
+# --------------------------------------------------------------------------------------
+# Continuous / count features given to models (all computed from GPS + the trip's own network only).
+FEATURES = [
+    # geometry
+    "dist_m", "frac", "dist_to_start_m", "dist_to_end_m", "log_arc_len",
+    # rank / context inside the point's candidate set
+    "rank", "dist_minus_nearest", "n_candidates", "is_nearest",
+    # direction
+    "arc_bearing", "heading_diff_abs", "heading_sin", "heading_cos", "heading_valid", "is_reverse_twin",
+    # motion
+    "speed_mps", "after_gap", "gap_len_s", "stationary", "in_hive",
+    # temporal context
+    "d_prev_m", "d_next_m", "mean_dist_win_m",
+    # topology
+    "arc_in_deg", "arc_out_deg", "is_two_way",
+]
+# Columns kept for reporting / weighting but NOT model features.
+FLAG_COLS = ["speed_jump", "speed_outlier", "candidate_source"]
+
+
+def arc_reverse_ids(trip: Trip) -> np.ndarray:
+    """For each arc_id, the arc_id of its opposite-direction partner (v->u), or -1 if none (one-way)."""
+    n_nodes = len(trip.node_xy)
+    keys = trip.arcs[:, 0].astype(np.int64) * n_nodes + trip.arcs[:, 1]
+    rev = trip.arcs[:, 1].astype(np.int64) * n_nodes + trip.arcs[:, 0]
+    order = np.argsort(keys, kind="stable")
+    pos = np.clip(np.searchsorted(keys[order], rev), 0, len(keys) - 1)
+    hit = keys[order][pos] == rev
+    return np.where(hit, order[pos], -1)                          # arc_id of the reverse twin
+
+
+def point_headings(trip: Trip, after_gap: np.ndarray, cfg: dict = CONFIG) -> tuple[np.ndarray, np.ndarray]:
+    """GPS heading per fix from a smoothed window, with a validity flag.
+
+    Heading = bearing (deg clockwise from north) from fix i-w to fix i+w (clipped at the ends). It is declared
+    invalid when the window displacement is below ``heading_min_disp_m`` (stationary / noise) or the window
+    contains a long gap. Invalid headings are returned as 0 and must be read together with ``valid``.
+    Returns (heading_deg (N,), valid (N,) bool) indexed by gps_row."""
+    n, w = trip.n_gps, cfg["heading_half_window"]
+    i = np.arange(n)                                              # gps_row
+    prev, nxt = np.clip(i - w, 0, n - 1), np.clip(i + w, 0, n - 1)
+    d = trip.gps_xy[nxt] - trip.gps_xy[prev]
+    disp = np.hypot(d[:, 0], d[:, 1])
+    cg = np.cumsum(after_gap.astype(int))
+    gap_in_window = (cg[nxt] - cg[prev]) > 0                      # a long gap inside the window breaks the direction
+    valid = (disp >= cfg["heading_min_disp_m"]) & ~gap_in_window
+    heading = (np.degrees(np.arctan2(d[:, 0], d[:, 1])) + 360.0) % 360.0
+    return np.where(valid, heading, 0.0), valid
+
+
+def build_for_trip(trip: Trip, rows: np.ndarray | None = None, cfg: dict = CONFIG) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Candidates + features for one Trip. ROUTE-FREE. Returns (features_per_pair, per_point_summary).
+
+    features_per_pair has keys (trip_id, point_id, gps_row, arc_id[local]) followed by FEATURES and FLAG_COLS.
+    """
+    fl = point_flags(trip, cfg)                                    # per-point flags, index = gps_row
+    pairs, points = generate_candidates(trip, rows, cfg)
+    r, a = pairs.gps_row.to_numpy(), pairs.arc_id.to_numpy()      # gps_row, arc_id (local) of each pair
+    n = trip.n_gps
+    P_ = trip.gps_xy[r]
+    out = pd.DataFrame({"trip_id": trip.trip_id, "point_id": trip.trip_id + "_" + pairs.gps_row.astype(str),
+                        "gps_row": r, "arc_id": a})
+    # --- geometry ---
+    out["dist_m"] = pairs.dist_m.to_numpy()
+    out["frac"] = pairs.frac.to_numpy()
+    out["dist_to_start_m"] = np.hypot(*(P_ - trip.arc_a[a]).T)
+    out["dist_to_end_m"] = np.hypot(*(P_ - trip.arc_b[a]).T)
+    out["log_arc_len"] = np.log1p(trip.arc_len[a])
+    # --- rank / context ---
+    out["rank"] = pairs["rank"].to_numpy()
+    out["n_candidates"] = pairs.groupby("gps_row")["gps_row"].transform("size").to_numpy()
+    out["dist_minus_nearest"] = out.dist_m.to_numpy() - pairs.groupby("gps_row").dist_m.transform("min").to_numpy()
+    out["is_nearest"] = (pairs["rank"].to_numpy() == 0).astype(np.int8)
+    # --- direction ---
+    heading, hvalid = point_headings(trip, fl.after_gap.to_numpy(), cfg)
+    bearing = trip.arc_bearing[a]
+    diff = ((heading[r] - bearing + 180.0) % 360.0) - 180.0        # signed difference in [-180, 180)
+    ok = hvalid[r]
+    out["arc_bearing"] = bearing
+    out["heading_diff_abs"] = np.where(ok, np.abs(diff), 90.0)     # neutral = 90 deg (uninformative) when invalid
+    out["heading_sin"] = np.where(ok, np.sin(np.radians(diff)), 0.0)
+    out["heading_cos"] = np.where(ok, np.cos(np.radians(diff)), 0.0)
+    out["heading_valid"] = ok.astype(np.int8)
+    rev = arc_reverse_ids(trip)[a]                                  # reverse twin arc_id (or -1)
+    keyset = r.astype(np.int64) * trip.n_arcs + a                   # (gps_row, arc_id) of every candidate
+    twin_key = r.astype(np.int64) * trip.n_arcs + np.maximum(rev, 0)
+    out["is_reverse_twin"] = ((rev >= 0) & np.isin(twin_key, keyset)).astype(np.int8)
+    # --- motion (point-level values broadcast to the point's candidates) ---
+    speed = pd.Series(fl.speed_mps.to_numpy()).bfill().fillna(0.0).to_numpy()    # first fix has no previous step
+    out["speed_mps"] = speed[r]
+    out["after_gap"] = fl.after_gap.to_numpy()[r].astype(np.int8)
+    out["gap_len_s"] = fl.gap_len_s.to_numpy()[r]
+    out["stationary"] = fl.stationary.to_numpy()[r].astype(np.int8)
+    out["in_hive"] = fl.in_hive.to_numpy()[r].astype(np.int8)
+    # --- temporal context: distance of neighbouring fixes to THE SAME arc (indices clipped at the trip ends) ---
+    W = cfg["temporal_half_window"]
+    acc = np.zeros(len(r)); dprev = dnext = None
+    for o in range(-W, W + 1):
+        d_o, _ = pair_geometry(trip, np.clip(r + o, 0, n - 1), a)
+        acc += d_o
+        if o == -1: dprev = d_o
+        if o == 1: dnext = d_o
+    out["d_prev_m"], out["d_next_m"], out["mean_dist_win_m"] = dprev, dnext, acc / (2 * W + 1)
+    # --- topology ---
+    out["arc_in_deg"] = trip.node_in_deg[trip.arcs[a, 0]]           # arcs entering the start node
+    out["arc_out_deg"] = trip.node_out_deg[trip.arcs[a, 1]]         # arcs leaving the end node
+    out["is_two_way"] = trip.arc_has_reverse[a].astype(np.int8)
+    # --- flags (not model features) ---
+    out["speed_jump"] = fl.speed_jump.to_numpy()[r].astype(np.int8)
+    out["speed_outlier"] = fl.speed_outlier.to_numpy()[r].astype(np.int8)
+    out["candidate_source"] = pairs.candidate_source.to_numpy()
+    for c in FEATURES:                                              # compact storage; precision is far below GPS noise
+        if out[c].dtype == np.float64:
+            out[c] = out[c].astype(np.float32)
+    return out, points
+
+
+def build_candidates_and_features(track, nodes, arcs, config: dict = CONFIG, trip_id: str = "request"):
+    """INFERENCE entry point for the API. NO route argument, NO labels.
+
+    Args:
+        track: (N,3) lon, lat, t.  nodes: (V,2) lon, lat.  arcs: (A,2) from_node, to_node (row = arc_id).
+    Returns:
+        (features_per_pair, per_point_summary, trip) - the Trip is returned so the caller can draw arc geometry.
+    Every GPS row is processed and none is ever dropped.
+    """
+    trip = trip_from_arrays(trip_id, "inference", track, nodes, arcs)
+    feats, points = build_for_trip(trip, None, config)
+    return feats, points, trip
+
+
+def label_trip(trip: Trip, route: np.ndarray, config: dict = CONFIG) -> pd.DataFrame:
+    """TRAINING / SERVER-SIDE SCORING ONLY: reference label (route_pos, arc_id) for every GPS point of a trip.
+
+    Never call this from the prediction path; the route must not reach the model or the UI."""
+    fl = point_flags(trip, config)
+    kept, _ = apply_training_drop(fl, trip.split)                   # only the train partition may drop rows
+    return align_to_route(trip, route, kept.reset_index(drop=True), config)
+
+
+def scale_features(df: pd.DataFrame, bundle: dict) -> pd.DataFrame:
+    """Rebuild the SCALED feature table from the raw one using the train-fitted bundle (``scaler.joblib``).
+
+    Steps (all parameters learned on TRAIN only): winsorise continuous features to the stored bounds, ``log1p`` the ones decided
+    as skewed, StandardScaler, binary flags passed through unchanged.
+
+    Args:
+        df: a raw candidate table (``*_candidates.parquet``).  bundle: ``joblib.load('scaler.joblib')``.
+    Returns:
+        DataFrame with the continuous features scaled (float32) followed by the binary features.
+    """
+    cont, binary = bundle["continuous_features"], bundle["binary_features"]
+    X = df[cont].to_numpy(float).copy()
+    for j, f in enumerate(cont):
+        X[:, j] = np.clip(X[:, j], *bundle["winsor"][f])
+        if f in bundle["log1p"]:
+            X[:, j] = np.log1p(np.maximum(X[:, j], 0))
+    out = pd.DataFrame(bundle["scaler"].transform(X).astype(np.float32), columns=cont, index=df.index)
+    for f in binary:
+        out[f] = df[f].to_numpy()
+    return out
