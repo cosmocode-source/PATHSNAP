@@ -1,0 +1,30 @@
+# Python virtual environments
+venv/
+.venv/
+env/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Jupyter and local tooling
+.ipynb_checkpoints/
+.vscode/
+.idea/
+
+# Generated outputs
+outputs/
+artifacts/
+models/
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
