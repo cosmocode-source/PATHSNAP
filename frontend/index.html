@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PathSnap &mdash; Map-Matching Evaluation</title>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet 1.9.4 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLvvZjx2CdzSkeRePhboqOTlo+xpzS2QMrPhrPEVCsek5tl4PZGuFYcC1fq8bW6553Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzSmGxKGPXfm2cHZVqFa4DeFCOA0OD8nXzmwaOtGJEJgw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-bar">
+    <div class="brand-section">
+      <div class="brand-logo">PS</div>
+      <div>
+        <h1 class="brand-title">PathSnap</h1>
+        <span class="brand-subtitle">Map-matching route reconstruction</span>
+      </div>
+    </div>
+
+    <!-- Center: API URL Input and Connection Controls -->
+    <div class="api-url-center">
+      <input type="text" id="api-url-input" class="input-text" placeholder="http://localhost:8000 or ngrok URL" spellcheck="false" />
+      <button id="btn-connect" class="btn btn-primary btn-sm">Connect</button>
+      <button id="btn-test-conn" class="btn btn-outline btn-sm">Test connection</button>
+    </div>
+
+    <!-- Right: Live Connection Status Pill -->
+    <div class="status-section">
+      <div id="connection-pill" class="status-pill disconnected">
+        <span class="dot"></span> Not connected
+      </div>
+    </div>
+  </header>
+
+  <!-- App Main Content Container -->
+  <main class="app-container">
+
+    <!-- Control Card -->
+    <section class="card control-card">
+      <div class="control-card-inner">
+        <div class="control-left">
+          <label for="trip-select" class="visually-hidden">Select Trip</label>
+          <select id="trip-select" class="select-trip">
+            <option value="" disabled selected>Loading trips...</option>
+          </select>
+          <label class="toggle-label" title="When enabled, bypasses server-side result cache and re-computes everything">
+            <input type="checkbox" id="skip-cache-toggle" />
+            <span>Re-run (skip cache)</span>
+          </label>
+        </div>
+
+        <div class="control-actions">
+          <button id="btn-run-trip" class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Run trip
+          </button>
+          <button id="btn-run-all" class="btn btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Run all 10
+          </button>
+        </div>
+      </div>
+
+      <!-- Batch Progress (Run All) -->
+      <div id="batch-progress-wrap" class="batch-progress-container">
+        <span id="batch-progress-text" class="batch-progress-text">0 / 10</span>
+        <div class="progress-track">
+          <div id="batch-progress-bar" class="progress-bar" style="width: 0%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Summary Strip (Visible after at least one finished trip) -->
+    <section id="summary-strip" class="summary-strip" aria-live="polite">
+      <!-- Injected via ui.js -->
+    </section>
+
+    <!-- Results Accordion List -->
+    <section class="results-section">
+      <div id="results-accordion" class="results-container" aria-live="polite">
+        <!-- Injected via ui.js -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- API Activity Drawer (Collapsible bottom bar) -->
+  <aside id="activity-drawer" class="activity-drawer" aria-label="API Activity Feed">
+    <button id="drawer-toggle" class="drawer-header" aria-expanded="false">
+      <div class="drawer-header-left">
+        <span class="pulse-indicator"></span>
+        <span>API Activity Feed &amp; Server Logs</span>
+      </div>
+      <span class="drawer-icon">&#x25B2;</span>
+    </button>
+    <div id="activity-logs-list" class="drawer-content">
+      <!-- Injected via main.js -->
+    </div>
+  </aside>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" aria-live="assertive"></div>
+
+  <!-- Application Bootstrap -->
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
