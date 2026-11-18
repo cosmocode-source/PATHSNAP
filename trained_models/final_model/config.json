@@ -55,5 +55,21 @@
     "logloss_not_worse": true
   },
   "preprocessing_config": "data_preprocessing/data_preprocessing/preprocessing_config.json",
-  "seed": 42
+  "seed": 42,
+  "variants": {
+    "primary": {
+      "name": "untuned",
+      "model_file": "lightgbm_model.txt",
+      "why": "decision rule: tuned gain not beyond the noise"
+    },
+    "alternative": {
+      "name": "tuned",
+      "folder": "variants/tuned",
+      "model_file": "variants/tuned/lightgbm_model.txt",
+      "oof_predictions": "variants/tuned/oof_predictions.parquet",
+      "student_predictions": "variants/tuned/student_predictions.parquet",
+      "why": "offered to the HMM stage at the team's request: slightly better normalised log loss (CV 0.4408 vs 0.4461) and classifier-only route continuity, which may matter for emissions; ~5x slower, 10x larger"
+    }
+  },
+  "hmm_note": "Compare both variants with the HMM using train (CV out-of-fold) and student-test only; never the evaluator trips."
 }
