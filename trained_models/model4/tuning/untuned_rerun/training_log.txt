@@ -1,0 +1,13 @@
+2026-11-18 17:48:48  === LightGBM (untuned, re-run) (Boosting) | seeds [42] | table raw ===
+2026-11-18 17:48:48  python 3.13.7 on Windows-11-10.0.26300-SP0
+2026-11-18 17:48:49  [train] 208,417 points, 1,943,052 candidate rows, miss rate 0.1037, fit_include rows 1,814,286
+2026-11-18 17:48:49  [student] 19,160 points, 207,713 candidate rows, miss rate 0.0015, fit_include rows 207,713
+2026-11-18 17:48:59  seed 42 fold 0: fit     8.9s  rows 1,443,750  top1_all 0.8185  top1_in_cands 0.8228  macroF1 0.8997  ll_raw 0.1048  ll_norm 0.5475
+2026-11-18 17:49:20  seed 42 fold 1: fit    19.7s  rows 1,368,322  top1_all 0.9066  top1_in_cands 0.9083  macroF1 0.9476  ll_raw 0.0627  ll_norm 0.2793
+2026-11-18 17:49:31  seed 42 fold 2: fit     9.8s  rows 1,457,100  top1_all 0.5597  top1_in_cands 0.8326  macroF1 0.8170  ll_raw 0.1110  ll_norm 0.4959
+2026-11-18 17:49:54  seed 42 fold 3: fit    22.4s  rows 1,520,044  top1_all 0.7740  top1_in_cands 0.8664  macroF1 0.8990  ll_raw 0.0787  ll_norm 0.4303
+2026-11-18 17:50:15  seed 42 fold 4: fit    19.2s  rows 1,467,928  top1_all 0.8077  top1_in_cands 0.8271  macroF1 0.8998  ll_raw 0.0780  ll_norm 0.4773
+2026-11-18 17:50:34  seed 42 final fit: 12.5s on 1,814,286 rows
+2026-11-18 17:50:38  seed 42 student: top1_all 0.8636  macroF1 0.9252  ll_norm 0.4018  continuity 0.7389  inference 3.4 ms / 1,000 points
+2026-11-18 17:50:40  CV top1_all 0.7733 +/- 0.1291 | student top1_all 0.8636 | total 110.0s
+2026-11-18 17:50:40  outputs written to C:\Users\Cathy\Desktop\hack 23\PATHSNAP\trained_models\model4\tuning\untuned_rerun

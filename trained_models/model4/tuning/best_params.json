@@ -1,0 +1,28 @@
+{
+  "chosen_trial": 23,
+  "best_trial_by_objective": 22,
+  "tie_break_rule": "trials within one fold standard error (std / sqrt(5)) of the best mean: lowest mean normalised log loss",
+  "params": {
+    "learning_rate": 0.0238943484631863,
+    "num_leaves": 232,
+    "max_depth": 12,
+    "min_child_samples": 205,
+    "feature_fraction": 0.5426347976960108,
+    "bagging_fraction": 0.5824633942587291,
+    "lambda_l1": 0.0027777042271715075,
+    "lambda_l2": 0.23075515131579688,
+    "min_split_gain": 0.3346793657763438
+  },
+  "cv_top1_in_cands_mean": 0.8574973109829418,
+  "cv_top1_in_cands_std": 0.032955369512509894,
+  "cv_logloss_norm_mean": 0.4299029945366086,
+  "best_iterations_per_fold": [
+    233,
+    409,
+    226,
+    421,
+    410
+  ],
+  "frozen_at": "2026-11-18 17:48:48",
+  "student_test_used_before_freeze": false
+}

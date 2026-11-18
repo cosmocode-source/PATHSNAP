@@ -1,0 +1,38 @@
+{
+  "seed": 42,
+  "n_trials": 46,
+  "n_workers": 2,
+  "study_name": "lightgbm_top1_in_cands",
+  "storage": "sqlite:///C:/Users/Cathy/Desktop/hack 23/PATHSNAP/trained_models/model4/tuning/optuna_study.db",
+  "sampler": "TPE (optuna.samplers.TPESampler, seed 42, 10 random start-up trials = Optuna default)",
+  "pruner": "none (every trial is run on all 5 folds so its record is complete; the budget allows it)",
+  "objective": "maximise mean over the 5 stored CV folds of Top-1 on label-in-candidates points (top1_in_cands)",
+  "tie_breaker": "trials within one fold standard error (std / sqrt(5)) of the best mean: lowest mean normalised log loss",
+  "max_rounds": 2000,
+  "early_stopping_rounds": 100,
+  "early_stop_val_share": 0.2,
+  "refit_inside_tuning": false,
+  "dataset_params": {
+    "feature_pre_filter": false,
+    "verbose": -1
+  },
+  "fixed_params": {
+    "objective": "binary",
+    "metric": "binary_logloss",
+    "bagging_freq": 1,
+    "verbose": -1,
+    "num_threads": 0
+  },
+  "class_weighting": "none, as in the untuned model (it uses sample weights only: clean 1.0 / ambiguous 0.5 / far 0.3)",
+  "search_space": {
+    "learning_rate": "float 0.01 - 0.2, log",
+    "num_leaves": "int 15 - 255, log",
+    "max_depth": "categorical {-1, 4, 5, ..., 12}",
+    "min_child_samples": "int 10 - 300",
+    "feature_fraction": "float 0.5 - 1.0",
+    "bagging_fraction": "float 0.5 - 1.0 (bagging_freq = 1)",
+    "lambda_l1": "float 1e-3 - 10, log",
+    "lambda_l2": "float 1e-3 - 10, log",
+    "min_split_gain": "float 0 - 1"
+  }
+}

@@ -1,0 +1,273 @@
+{
+  "study": {
+    "n_complete_trials": 41,
+    "n_trials_total": 50,
+    "sum_trial_minutes": 76.31666666666666,
+    "study_wall_minutes": 51.49272671666667,
+    "mean_trial_seconds": 111.6829268292683,
+    "sampler": "TPE (optuna.samplers.TPESampler, seed 42, 10 random start-up trials = Optuna default)",
+    "pruner": "none (every trial is run on all 5 folds so its record is complete; the budget allows it)",
+    "objective": "maximise mean over the 5 stored CV folds of Top-1 on label-in-candidates points (top1_in_cands)"
+  },
+  "spread_top5": {
+    "best": 0.8576914812680222,
+    "top5_mean": 0.8572863292131363,
+    "top5_range": 0.0007074937821004434,
+    "fold_se_of_best": 0.014910062976480667,
+    "baseline_trial0": 0.8552050877034544,
+    "best_minus_baseline": 0.0024863935645678126
+  },
+  "chosen": {
+    "chosen_trial": 23,
+    "best_trial_by_objective": 22,
+    "tie_break_rule": "trials within one fold standard error (std / sqrt(5)) of the best mean: lowest mean normalised log loss",
+    "params": {
+      "learning_rate": 0.0238943484631863,
+      "num_leaves": 232,
+      "max_depth": 12,
+      "min_child_samples": 205,
+      "feature_fraction": 0.5426347976960108,
+      "bagging_fraction": 0.5824633942587291,
+      "lambda_l1": 0.0027777042271715075,
+      "lambda_l2": 0.23075515131579688,
+      "min_split_gain": 0.3346793657763438
+    },
+    "cv_top1_in_cands_mean": 0.8574973109829418,
+    "cv_top1_in_cands_std": 0.032955369512509894,
+    "cv_logloss_norm_mean": 0.4299029945366086,
+    "best_iterations_per_fold": [
+      233,
+      409,
+      226,
+      421,
+      410
+    ],
+    "frozen_at": "2026-11-18 17:48:48",
+    "student_test_used_before_freeze": false
+  },
+  "param_importance_fanova": {
+    "max_depth": 0.3995288788236879,
+    "lambda_l1": 0.22895980830779156,
+    "num_leaves": 0.08339410519217083,
+    "min_split_gain": 0.06045910943558876,
+    "lambda_l2": 0.052603132742416424,
+    "min_child_samples": 0.04871723740150229,
+    "learning_rate": 0.04613551065191092,
+    "feature_fraction": 0.04463036699403033,
+    "bagging_fraction": 0.035571850450901034
+  },
+  "untuned_vs_tuned": {
+    "untuned": {
+      "CV Top-1 all (mean)": 0.7732893592776108,
+      "CV Top-1 all (std)": 0.1290672836086063,
+      "CV Top-1 in-cands (mean)": 0.8514470942778047,
+      "CV Top-1 in-cands (std)": 0.036139682030543456,
+      "CV Macro F1": 0.8926221852825899,
+      "CV log loss raw": 0.08702964461768836,
+      "CV log loss norm": 0.44606479150234424,
+      "CV ECE": 0.011369073774523373,
+      "Student Top-1 all": 0.8635699373695198,
+      "Student Top-1 clean": 0.8848187551761483,
+      "Student Macro F1": 0.9252192273039752,
+      "Student log loss raw": 0.06786231186453219,
+      "Student log loss norm": 0.401767059158237,
+      "Route continuity (CV OOF)": 0.7284707894198776,
+      "Route continuity (student)": 0.7389432485322897,
+      "Train Top-1 all": 0.7971422676653056,
+      "Final fit seconds": 12.53,
+      "Inference ms / 1,000 points": 3.395,
+      "Model size MB": 0.554495,
+      "Trees": 79.0
+    },
+    "tuned": {
+      "CV Top-1 all (mean)": 0.7736609191551411,
+      "CV Top-1 all (std)": 0.12889124609290303,
+      "CV Top-1 in-cands (mean)": 0.8519574978117571,
+      "CV Top-1 in-cands (std)": 0.037464386332602725,
+      "CV Macro F1": 0.8928636442807812,
+      "CV log loss raw": 0.0856069935512725,
+      "CV log loss norm": 0.440761140825057,
+      "CV ECE": 0.010089317273411428,
+      "Student Top-1 all": 0.863517745302714,
+      "Student Top-1 clean": 0.8848187551761483,
+      "Student Macro F1": 0.9251904599361368,
+      "Student log loss raw": 0.06555131014334442,
+      "Student log loss norm": 0.38288736582041744,
+      "Route continuity (CV OOF)": 0.7388793152422974,
+      "Route continuity (student)": 0.7549194991055456,
+      "Train Top-1 all": 0.8156436375151739,
+      "Final fit seconds": 31.05,
+      "Inference ms / 1,000 points": 16.609,
+      "Model size MB": 5.560694,
+      "Trees": 219.0
+    },
+    "tuned - untuned": {
+      "CV Top-1 all (mean)": 0.00037155987753034747,
+      "CV Top-1 all (std)": -0.00017603751570327564,
+      "CV Top-1 in-cands (mean)": 0.0005104035339523749,
+      "CV Top-1 in-cands (std)": 0.0013247043020592694,
+      "CV Macro F1": 0.0002414589981913906,
+      "CV log loss raw": -0.001422651066415856,
+      "CV log loss norm": -0.005303650677287219,
+      "CV ECE": -0.0012797565011119453,
+      "Student Top-1 all": -5.2192066805845094e-05,
+      "Student Top-1 clean": 0.0,
+      "Student Macro F1": -2.8767367838411495e-05,
+      "Student log loss raw": -0.0023110017211877693,
+      "Student log loss norm": -0.01887969333781958,
+      "Route continuity (CV OOF)": 0.0104085258224198,
+      "Route continuity (student)": 0.015976250573255912,
+      "Train Top-1 all": 0.018501369849868277,
+      "Final fit seconds": 18.520000000000003,
+      "Inference ms / 1,000 points": 13.214000000000002,
+      "Model size MB": 5.006199,
+      "Trees": 140.0
+    }
+  },
+  "paired": {
+    "per_fold": [
+      {
+        "fold": 0,
+        "top1_in_cands_untuned": 0.8228325392983619,
+        "top1_all_untuned": 0.8184744044602129,
+        "logloss_norm_untuned": 0.5475472214607018,
+        "top1_in_cands_tuned": 0.8207688976077042,
+        "top1_all_tuned": 0.8164216928535225,
+        "logloss_norm_tuned": 0.5373048300772683,
+        "diff_top1_in_cands": -0.002063641690657647,
+        "diff_top1_all": -0.002052711606690405,
+        "diff_logloss_norm": -0.010242391383433525
+      },
+      {
+        "fold": 1,
+        "top1_in_cands_untuned": 0.9083117476763676,
+        "top1_all_untuned": 0.90663675595521,
+        "logloss_norm_untuned": 0.2793287364569427,
+        "top1_in_cands_tuned": 0.910063995124181,
+        "top1_all_tuned": 0.9083857721336096,
+        "logloss_norm_tuned": 0.2728938872704452,
+        "diff_top1_in_cands": 0.0017522474478134376,
+        "diff_top1_all": 0.0017490161783996205,
+        "diff_logloss_norm": -0.006434849186497449
+      },
+      {
+        "fold": 2,
+        "top1_in_cands_untuned": 0.8325781539426064,
+        "top1_all_untuned": 0.5596827646979943,
+        "logloss_norm_untuned": 0.495869388574592,
+        "top1_in_cands_tuned": 0.8340315180530621,
+        "top1_all_tuned": 0.5606597574759105,
+        "logloss_norm_tuned": 0.4760668976308105,
+        "diff_top1_in_cands": 0.0014533641104557127,
+        "diff_top1_all": 0.0009769927779161858,
+        "diff_logloss_norm": -0.019802490943781503
+      },
+      {
+        "fold": 3,
+        "top1_in_cands_untuned": 0.8664019337016574,
+        "top1_all_untuned": 0.7739835893639336,
+        "logloss_norm_untuned": 0.4303223883995698,
+        "top1_in_cands_tuned": 0.8687154696132596,
+        "top1_all_tuned": 0.776050342402369,
+        "logloss_norm_tuned": 0.4463371967230581,
+        "diff_top1_in_cands": 0.002313535911602216,
+        "diff_top1_all": 0.0020667530384353983,
+        "diff_logloss_norm": 0.016014808323488283
+      },
+      {
+        "fold": 4,
+        "top1_in_cands_untuned": 0.82711109677003,
+        "top1_all_untuned": 0.8076692819107036,
+        "logloss_norm_untuned": 0.4772562226199152,
+        "top1_in_cands_tuned": 0.8262076086605789,
+        "top1_all_tuned": 0.806787030910294,
+        "logloss_norm_tuned": 0.4712028924237031,
+        "diff_top1_in_cands": -0.0009034881094511782,
+        "diff_top1_all": -0.0008822510004096173,
+        "diff_logloss_norm": -0.00605333019621207
+      }
+    ],
+    "bootstrap_over_trips": {
+      "train_cv_oof": {
+        "diff": 0.0005406939083604127,
+        "ci95": [
+          -0.0014918868332373255,
+          0.002690565362316955
+        ],
+        "n_trips": 80,
+        "trips_better": 52,
+        "trips_worse": 24
+      },
+      "student": {
+        "diff": -5.227118289686896e-05,
+        "ci95": [
+          -0.0033582590784937087,
+          0.002824449053850351
+        ],
+        "n_trips": 10,
+        "trips_better": 7,
+        "trips_worse": 2
+      }
+    }
+  },
+  "overfitting": {
+    "untuned": {
+      "train Top-1 all": 0.7971422676653056,
+      "CV Top-1 all": 0.7732893592776108,
+      "student Top-1 all": 0.8635699373695198,
+      "train - CV": 0.023852908387694827,
+      "CV - student": -0.09028057809190904
+    },
+    "tuned": {
+      "train Top-1 all": 0.8156436375151739,
+      "CV Top-1 all": 0.7736609191551411,
+      "student Top-1 all": 0.863517745302714,
+      "train - CV": 0.041982718360032756,
+      "CV - student": -0.08985682614757284
+    }
+  },
+  "calibration": {
+    "untuned": {
+      "ece_cv_oof": 0.011369073774523373,
+      "ece_student": 0.0056916954815379025,
+      "logloss_norm_cv": 0.44606479150234424,
+      "logloss_norm_student": 0.401767059158237
+    },
+    "tuned": {
+      "ece_cv_oof": 0.010089317273411428,
+      "ece_student": 0.004140820353216941,
+      "logloss_norm_cv": 0.440761140825057,
+      "logloss_norm_student": 0.38288736582041744
+    }
+  },
+  "calibration_variant_tested": false,
+  "rerun_check_vs_stored_model4": {
+    "stored model4": {
+      "cv top1_all": 0.7732893592776108,
+      "cv top1_in_cands": 0.8514470942778047,
+      "student top1_all": 0.8635699373695198,
+      "cv ll_norm": 0.44606479150234424
+    },
+    "re-run here": {
+      "cv top1_all": 0.7732893592776108,
+      "cv top1_in_cands": 0.8514470942778047,
+      "student top1_all": 0.8635699373695198,
+      "cv ll_norm": 0.44606479150234424
+    },
+    "difference": {
+      "cv top1_all": 0.0,
+      "cv top1_in_cands": 0.0,
+      "student top1_all": 0.0,
+      "cv ll_norm": 0.0
+    }
+  },
+  "decision": {
+    "ci95_cv_top1_in_cands_gain": [
+      -0.0014918868332373255,
+      0.002690565362316955
+    ],
+    "better_cv_beyond_noise": false,
+    "logloss_not_worse": true,
+    "final_choice": "untuned"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "model": "LightGBM",
+  "variant": "untuned",
+  "model_file": "lightgbm_model.txt",
+  "source_folder": "trained_models/model4",
+  "params": {
+    "objective": "binary",
+    "metric": "binary_logloss",
+    "learning_rate": 0.05,
+    "num_leaves": 63,
+    "min_child_samples": 100,
+    "feature_fraction": 0.8,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 1,
+    "lambda_l2": 1.0,
+    "verbose": -1,
+    "num_threads": 0
+  },
+  "n_trees": 79,
+  "features": [
+    "dist_m",
+    "frac",
+    "dist_to_start_m",
+    "dist_to_end_m",
+    "log_arc_len",
+    "rank",
+    "dist_minus_nearest",
+    "n_candidates",
+    "is_nearest",
+    "arc_bearing",
+    "heading_sin",
+    "heading_cos",
+    "heading_valid",
+    "is_reverse_twin",
+    "speed_mps",
+    "after_gap",
+    "stationary",
+    "d_prev_m",
+    "d_next_m",
+    "mean_dist_win_m",
+    "arc_in_deg",
+    "arc_out_deg"
+  ],
+  "n_features": 22,
+  "input_table": "raw candidate table (no scaling)",
+  "output": "P(candidate arc is the true arc) per (point, candidate) row; normalise within each point for HMM emissions",
+  "calibration": "none (raw probabilities are already well calibrated, see tuning/results.json)",
+  "decision_rule": "tuned only if the 95% trip-bootstrap CI of the CV Top-1 (in-cands) gain is above 0 AND CV normalised log loss is not worse",
+  "decision_inputs": {
+    "ci95_cv_top1_in_cands_gain": [
+      -0.0014918868332373255,
+      0.002690565362316955
+    ],
+    "better_cv_beyond_noise": false,
+    "logloss_not_worse": true
+  },
+  "preprocessing_config": "data_preprocessing/data_preprocessing/preprocessing_config.json",
+  "seed": 42
+}
