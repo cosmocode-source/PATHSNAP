@@ -25,3 +25,11 @@ stage,partition,item,value,note
 4.4,train,share_fallback_train,0.0857,points using the 100 m fallback
 4.4,train,share_nearest_k_train,0.0068,points using nearest-K
 4.4,train,miss_rate_final_student_all,0.00151,descriptive only
+4.5b,train,features_dropped,4.0,"heading_cos,gap_len_s,in_hive,is_two_way"
+4.5b,train,features_log1p,2.0,"dist_to_start_m,dist_to_end_m"
+4.5b,train,positive_share_usable_rows,0.10307,class balance per candidate row
+4.6,train,fit_excluded_points_train,21222.0,"train points whose label arc is not in the candidate set (kept in the table, fit_include=False)"
+4.6,train,folds,5.0,"GroupKFold by trip_id, shuffle, seed 42"
+4.7,train,train_candidate_rows,1943052.0,rows in train_candidates.parquet
+4.7,train,student_candidate_rows,207713.0,rows in student_candidates.parquet
+4.8,train,tests_passed,7.0,of 7
