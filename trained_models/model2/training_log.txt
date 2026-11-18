@@ -1,0 +1,13 @@
+2026-11-18 15:17:17  === KNN (distance-weighted) (Instance-based) | seeds [42] | table scaled ===
+2026-11-18 15:17:17  python 3.12.6 on Windows-11-10.0.26200-SP0
+2026-11-18 15:17:17  [train] 208,417 points, 1,943,052 candidate rows, miss rate 0.1037, fit_include rows 1,814,286
+2026-11-18 15:17:17  [student] 19,160 points, 207,713 candidate rows, miss rate 0.0015, fit_include rows 207,713
+2026-11-18 15:17:50  seed 42 fold 0: fit     0.1s  rows 1,443,750  top1_all 0.8185  top1_in_cands 0.8229  macroF1 0.8998  ll_raw 0.2123  ll_norm 1.3837
+2026-11-18 15:18:35  seed 42 fold 1: fit     0.1s  rows 1,368,322  top1_all 0.8739  top1_in_cands 0.8755  macroF1 0.9290  ll_raw 0.1342  ll_norm 0.6161
+2026-11-18 15:19:20  seed 42 fold 2: fit     0.1s  rows 1,457,100  top1_all 0.5454  top1_in_cands 0.8114  macroF1 0.8076  ll_raw 0.1576  ll_norm 1.1837
+2026-11-18 15:19:49  seed 42 fold 3: fit     0.1s  rows 1,520,044  top1_all 0.7637  top1_in_cands 0.8549  macroF1 0.8930  ll_raw 0.1758  ll_norm 1.3829
+2026-11-18 15:20:23  seed 42 fold 4: fit     0.1s  rows 1,467,928  top1_all 0.7893  top1_in_cands 0.8083  macroF1 0.8896  ll_raw 0.1729  ll_norm 1.3023
+2026-11-18 15:20:26  seed 42 final fit: 0.1s on 1,814,286 rows
+2026-11-18 15:24:00  seed 42 student: top1_all 0.8428  macroF1 0.9138  ll_norm 0.7614  continuity 0.7283  inference 1072.3 ms / 1,000 points
+2026-11-18 15:24:02  CV top1_all 0.7582 +/- 0.1258 | student top1_all 0.8428 | total 403.9s
+2026-11-18 15:24:02  outputs written to C:\Users\shiva\PATHSNAP\trained_models\model2

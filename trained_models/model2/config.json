@@ -1,0 +1,47 @@
+{
+  "model": "KNN (distance-weighted)",
+  "family": "Instance-based",
+  "seeds": [
+    42
+  ],
+  "table": "scaled",
+  "features": [
+    "dist_m",
+    "frac",
+    "dist_to_start_m",
+    "dist_to_end_m",
+    "log_arc_len",
+    "rank",
+    "dist_minus_nearest",
+    "n_candidates",
+    "is_nearest",
+    "arc_bearing",
+    "heading_sin",
+    "heading_cos",
+    "heading_valid",
+    "is_reverse_twin",
+    "speed_mps",
+    "after_gap",
+    "stationary",
+    "d_prev_m",
+    "d_next_m",
+    "mean_dist_win_m",
+    "arc_in_deg",
+    "arc_out_deg"
+  ],
+  "n_features": 22,
+  "loss_function": "none (lazy learner, no training objective); probabilities = distance-weighted neighbour vote",
+  "fit_rows": "train rows with fit_include == True (other CV folds during CV, all folds for the final model)",
+  "cv": "5-fold GroupKFold by trip_id, fold ids stored by preprocessing (cleaned_data/model_data/folds.csv)",
+  "evaluation": "unweighted; ALL points headline, CLEAN points diagnostic; student-test evaluation only",
+  "hyperparameters": {
+    "n_neighbors": 50,
+    "weights": "distance",
+    "metric": "euclidean",
+    "algorithm": "auto",
+    "subsample_rows": 150000,
+    "subsample_seed": 42,
+    "sample_weight": "not supported by sklearn KNN -> only the fit_include exclusion rule is applied",
+    "n_jobs": -1
+  }
+}
