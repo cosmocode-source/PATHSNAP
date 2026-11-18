@@ -32,6 +32,13 @@ for part, values in summary.items():
     subset = data[data.partition == part]
     means = subset.groupby('method').top1_all.mean()
     lines.append('Ablations (mean trip top-1): ' + ', '.join(f'{name} {value:.4f}' for name, value in means.items()) + '. The classifier is also the emission-only result.')
+    base_rows = subset[subset.method == 'classifier']
+    hmm_rows = subset[subset.method == 'hmm']
+    for metric in ['arc_precision_vs_reference', 'arc_recall_vs_reference', 'arc_f1_vs_reference', 'length_mismatch_vs_reference']:
+        lines.append(f"Mean trip {metric}: classifier {base_rows[metric].mean():.4f}, HMM {hmm_rows[metric].mean():.4f}.")
+    miss = (base_rows.n_points * base_rows.candidate_miss_rate).sum() / base_rows.n_points.sum()
+    lines.append(f"Pooled candidate miss rate: {miss:.4%}. HMM changed {int(hmm_rows.n_points_changed.sum())} points, recorded {int(hmm_rows.n_breaks.sum())} breaks and relaxed {int(hmm_rows.n_gap_relaxed_steps.sum())} gap steps.")
+    lines.append(f"Broken consecutive transitions after collapsing repeats: classifier {int(base_rows.broken_transitions.sum())}, HMM {int(hmm_rows.broken_transitions.sum())}.")
     largest = subset[subset.method == 'hmm'].sort_values('n_points').iloc[-1]
     lines.append(f"Largest trip: {largest.trip_id}, {int(largest.n_points)} points, {largest.decode_seconds:.3f} seconds to decode.")
     p = pruning[pruning.partition == part]
@@ -46,9 +53,11 @@ for part, rows in data.groupby('partition'):
         delta = b.loc[trip_id, 'top1_all'] - a.loc[trip_id, 'top1_all']
         if delta <= 0:
             g, f, miss, stationary, sparse = b.loc[trip_id, ['gap_share', 'far_share', 'candidate_miss_rate', 'stationary_share', 'sparse_step_share']]
-            reason = max([(g, 'gap share'), (f, 'far-label share'), (miss, 'candidate misses'),
-                          (stationary, 'stationary-point share'), (sparse, 'steps over 50 m')], key=lambda x: x[0])
-            detail = f'{reason[1]} {reason[0]:.3f} (possible contributing factor)' if reason[0] > 0 else 'no cause established by these indicators'
+            signals = [(f, .30, 'far-label share'), (miss, .05, 'candidate misses'),
+                       (g, .05, 'gap share'), (stationary, .05, 'stationary-point share'),
+                       (sparse, .20, 'steps over 50 m')]
+            marked = [(v, name) for v, threshold, name in signals if v >= threshold]
+            detail = ', '.join(f'{name} {v:.1%}' for v, name in marked) if marked else 'no clear cause from aggregate trip indicators'
             topo = topology.loc[(part, trip_id)]
             lines.append(f"- {part} {trip_id}: {delta:+.4f}; {detail}. Reference repeats {int(topo.reference_repeated_arc_count)} arcs; largest weak road component contains {topo.largest_weak_component_node_share:.1%} of indexed nodes.")
 lines += ['', '## Interpretation notes', '',

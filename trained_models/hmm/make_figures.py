@@ -8,7 +8,7 @@ import pandas as pd
 HERE = Path(__file__).parent
 outdir = HERE / 'figures'
 outdir.mkdir(exist_ok=True)
-data = pd.read_csv(HERE / 'results/per_trip_metrics.csv')
+data = pd.read_csv(HERE / 'results/per_trip_metrics.csv', dtype={'trip_id': str})
 for part, rows in data.groupby('partition'):
     base = rows[rows.method == 'classifier'].set_index('trip_id').sort_index()
     hmm = rows[rows.method == 'hmm'].set_index('trip_id').loc[base.index]
@@ -17,6 +17,9 @@ for part, rows in data.groupby('partition'):
         ax.plot(range(len(base)), base[metric], '.', label='Classifier')
         ax.plot(range(len(base)), hmm[metric], '.', label='HMM')
         ax.set(title=f'{part}: {label} by trip', xlabel='Trip (sorted by ID)', ylabel=label)
+        step = max(1, len(base) // 10)
+        ticks = list(range(0, len(base), step))
+        ax.set_xticks(ticks, [str(base.index[i]) for i in ticks], rotation=45, ha='right', fontsize=7)
         ax.legend(); fig.tight_layout(); fig.savefig(outdir / f'{part}_{metric}.png', dpi=160); plt.close(fig)
     fig, axes = plt.subplots(1, 2, figsize=(9, 4))
     diff = hmm.top1_all - base.top1_all

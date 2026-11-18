@@ -1,31 +1,76 @@
 {
+  "student": {
+    "top1_all": {
+      "classifier_trip_mean": 0.869297657851129,
+      "hmm_trip_mean": 0.8707107056922471,
+      "paired_difference": 0.0014130478411180092,
+      "bootstrap_95_ci": [
+        -0.026547351448613865,
+        0.021080664430240665
+      ],
+      "classifier_point_weighted": 0.8635699373695198,
+      "hmm_point_weighted": 0.8497912317327766
+    },
+    "top1_in_candidates": {
+      "classifier_trip_mean": 0.8700490331077739,
+      "hmm_trip_mean": 0.8714818079816702,
+      "paired_difference": 0.0014327748738961587,
+      "bootstrap_95_ci": [
+        -0.028299226488635393,
+        0.020524916041257404
+      ],
+      "classifier_point_weighted": 0.8648789922115937,
+      "hmm_point_weighted": 0.8510793999268204
+    },
+    "continuity": {
+      "classifier_trip_mean": 0.7567711154577841,
+      "hmm_trip_mean": 0.8567977994917021,
+      "paired_difference": 0.1000266840339179,
+      "bootstrap_95_ci": [
+        0.06214673176223691,
+        0.1344450822093871
+      ]
+    },
+    "top1_clean": {
+      "classifier_point_weighted": 0.8848187551761483,
+      "hmm_point_weighted": 0.8593361788876855
+    }
+  },
   "train": {
     "top1_all": {
       "classifier_trip_mean": 0.8361440883781028,
       "hmm_trip_mean": 0.813560938714757,
-      "paired_difference": -0.022583149663345962,
+      "paired_difference": -0.02258314966334596,
       "bootstrap_95_ci": [
-        -0.041382943081815365,
-        -0.004104676650509268
-      ]
+        -0.04060377383919255,
+        -0.004544545912008745
+      ],
+      "classifier_point_weighted": 0.7673414356794311,
+      "hmm_point_weighted": 0.7313414932563083
     },
     "top1_in_candidates": {
       "classifier_trip_mean": 0.8501454363302621,
       "hmm_trip_mean": 0.8259397470929727,
       "paired_difference": -0.024205689237289538,
       "bootstrap_95_ci": [
-        -0.042924735694837714,
-        -0.006500800497438871
-      ]
+        -0.043892713999637296,
+        -0.006135874729994493
+      ],
+      "classifier_point_weighted": 0.8561540067559972,
+      "hmm_point_weighted": 0.8159874087913618
     },
     "continuity": {
       "classifier_trip_mean": 0.7404602614366006,
       "hmm_trip_mean": 0.844281119410784,
       "paired_difference": 0.10382085797418342,
       "bootstrap_95_ci": [
-        0.08154944083809577,
-        0.12858508502220603
+        0.0821619788227859,
+        0.12769333511169362
       ]
+    },
+    "top1_clean": {
+      "classifier_point_weighted": 0.8811504099284553,
+      "hmm_point_weighted": 0.8375057840845722
     }
   }
 }
