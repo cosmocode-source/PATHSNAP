@@ -18,5 +18,18 @@
   "ambiguity_margin_m": 5.0,
   "weight_far": 0.3,
   "weight_ambiguous": 0.5,
+  "cand_radius_primary_m": 50.0,
+  "cand_radius_fallback_m": 100.0,
+  "cand_min_candidates": 2,
+  "cand_nearest_k": 5,
+  "cand_max_per_point": 50,
+  "cand_query_chunk_points": 4000,
+  "cand_study_radii_m": [
+    15,
+    20,
+    30,
+    50,
+    100
+  ],
   "chunk_cells": 2000000
 }

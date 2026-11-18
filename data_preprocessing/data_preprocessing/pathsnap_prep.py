@@ -62,6 +62,14 @@ CONFIG = {
     # ---- sample weights (TRAIN only; team-lead decision; student rows always weight 1) ----
     "weight_far": 0.3,                # far labels: reference route may not cover the point -> trust less.
     "weight_ambiguous": 0.5,          # ambiguous labels: label arc is geometrically tied with another route arc.
+    # ---- candidate generation (4.4; route-free) ------------------------------------
+    "cand_radius_primary_m": 50.0,    # primary radius: ~99% route-arc coverage in the EDA pilot, ~5 candidates/point.
+    "cand_radius_fallback_m": 100.0,  # used only when the primary radius gives fewer than cand_min_candidates.
+    "cand_min_candidates": 2,         # a ranking model needs at least one alternative to the right arc.
+    "cand_nearest_k": 5,              # last resort: K nearest arcs regardless of radius (zero arcs within fallback radius).
+    "cand_max_per_point": 50,         # cap (nearest kept): ~p99 of the uncapped train count distribution (46); truncates <1% of points.
+    "cand_query_chunk_points": 4000,  # GPS points per spatial query (memory guard for ~300k-arc trips).
+    "cand_study_radii_m": [15, 20, 30, 50, 100],   # radii compared in the miss-rate study.
     # ---- paths -------------------------------------------------------------------
     "chunk_cells": 2_000_000,         # max (points x route arcs) cells per distance chunk (memory guard).
 }
@@ -402,3 +410,103 @@ def align_to_route(trip: Trip, route: np.ndarray, pts: pd.DataFrame, cfg: dict =
 def save_config(cfg: dict, path: Path) -> None:
     """Write the config (JSON) next to the code so every number can be traced."""
     path.write_text(json.dumps(cfg, indent=2, default=float), encoding="utf-8")
+
+
+# --------------------------------------------------------------------------------------
+# 4.4 Candidate generation (ROUTE-FREE: sees only GPS + the trip's own network)
+# --------------------------------------------------------------------------------------
+def pair_geometry(trip: Trip, gps_rows: np.ndarray, arc_ids: np.ndarray):
+    """Exact point-to-segment distance (m) and projection fraction for aligned (gps_row, arc_id) pairs.
+
+    Args:
+        gps_rows: (m,) gps_row of each pair.  arc_ids: (m,) local arc_id of each pair.
+    Returns:
+        dist (m,), frac (m,) in [0,1] where 0 = arc start node and 1 = arc end node.
+    """
+    p = trip.gps_xy[gps_rows]
+    a, b = trip.arc_a[arc_ids], trip.arc_b[arc_ids]
+    ab = b - a
+    t = np.clip(((p - a) * ab).sum(1) / np.maximum((ab ** 2).sum(1), 1e-9), 0.0, 1.0)
+    d = np.hypot(*(p - (a + t[:, None] * ab)).T)
+    return d, t
+
+
+def query_radius(trip: Trip, rows: np.ndarray, radius: float, chunk: int) -> tuple[np.ndarray, np.ndarray]:
+    """All arcs within ``radius`` metres of each listed GPS point (STRtree, chunked).
+
+    Returns (gps_row_of_pair, arc_id_of_pair); a point with no arc in range simply has no pair."""
+    tree = trip.tree()
+    out_r, out_a = [], []
+    for s in range(0, len(rows), chunk):
+        sub = rows[s:s + chunk]
+        pts = shapely.points(trip.gps_xy[sub])                       # shapely Points (gps_row order)
+        q = tree.query(pts, predicate="dwithin", distance=radius)     # (2,m): [input index, arc_id]
+        out_r.append(sub[q[0]]); out_a.append(q[1])
+    if not out_r:
+        return np.empty(0, int), np.empty(0, int)
+    return np.concatenate(out_r), np.concatenate(out_a)
+
+
+def nearest_k_arcs(trip: Trip, rows: np.ndarray, k: int) -> tuple[np.ndarray, np.ndarray]:
+    """K nearest arcs (exact distance) for points with nothing inside the fallback radius.
+
+    Uses a KD-tree on arc mid-points to shortlist 6*K arcs, then ranks the shortlist by exact distance."""
+    from scipy.spatial import cKDTree
+    mid = (trip.arc_a + trip.arc_b) / 2.0                           # (A,2) arc mid-points; index = arc_id
+    kk = min(6 * k, trip.n_arcs)
+    _, idx = cKDTree(mid).query(trip.gps_xy[rows], k=kk)
+    idx = np.atleast_2d(idx).reshape(len(rows), -1)                 # (n, kk) arc_id shortlist
+    rr = np.repeat(rows, idx.shape[1]); aa = idx.ravel()
+    d, _ = pair_geometry(trip, rr, aa)
+    order = np.lexsort((d, rr))                                     # by point, then distance
+    rr, aa, d = rr[order], aa[order], d[order]
+    first = np.searchsorted(rr, rr, side="left")                    # start index of each point's block
+    keep = (np.arange(len(rr)) - first) < k
+    return rr[keep], aa[keep]
+
+
+def generate_candidates(trip: Trip, rows: np.ndarray | None = None, cfg: dict = CONFIG) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Candidate arcs for every GPS point. ROUTE-FREE and label-free (inference safe).
+
+    Scheme: primary radius -> if fewer than ``cand_min_candidates``, fallback radius -> if still none,
+    the K nearest arcs. At most ``cand_max_per_point`` (nearest) arcs are kept per point.
+
+    Args:
+        trip: loaded trip.  rows: gps_rows to process (default: all rows).
+    Returns:
+        pairs: one row per (gps_row, arc_id) with dist_m, frac, rank (0 = nearest), source.
+        points: one row per gps_row with n_candidates, candidate_source (primary / fallback / nearest_k).
+    """
+    rows = np.arange(trip.n_gps) if rows is None else np.asarray(rows)
+    ch = cfg["cand_query_chunk_points"]
+    r1, a1 = query_radius(trip, rows, cfg["cand_radius_primary_m"], ch)
+    cnt = np.bincount(np.searchsorted(rows, r1), minlength=len(rows))     # candidates per point at the primary radius
+    source = np.full(len(rows), "primary", dtype=object)
+
+    need_fb = np.flatnonzero(cnt < cfg["cand_min_candidates"])
+    if len(need_fb):                                                       # fallback radius for the sparse points
+        fb_rows = rows[need_fb]
+        rf, af = query_radius(trip, fb_rows, cfg["cand_radius_fallback_m"], ch)
+        keep = ~np.isin(r1, fb_rows)                                       # replace (superset) the primary result
+        r1, a1 = np.concatenate([r1[keep], rf]), np.concatenate([a1[keep], af])
+        cnt_fb = np.bincount(np.searchsorted(fb_rows, rf), minlength=len(fb_rows))
+        source[need_fb] = "fallback"
+        none = need_fb[cnt_fb == 0]                                        # nothing within the fallback radius either
+        if len(none):
+            rn, an = nearest_k_arcs(trip, rows[none], cfg["cand_nearest_k"])
+            r1, a1 = np.concatenate([r1, rn]), np.concatenate([a1, an])
+            source[none] = "nearest_k"
+
+    d, t = pair_geometry(trip, r1, a1)
+    order = np.lexsort((a1, d, r1))                                        # point, then distance, then arc_id (deterministic)
+    r1, a1, d, t = r1[order], a1[order], d[order], t[order]
+    first = np.searchsorted(r1, r1, side="left")
+    rank = np.arange(len(r1)) - first                                      # 0 = nearest candidate of that point
+    keep = rank < cfg["cand_max_per_point"]
+    r1, a1, d, t, rank = r1[keep], a1[keep], d[keep], t[keep], rank[keep]
+    n_c = np.bincount(np.searchsorted(rows, r1), minlength=len(rows))
+    src_pair = source[np.searchsorted(rows, r1)]
+    pairs = pd.DataFrame({"gps_row": r1, "arc_id": a1, "dist_m": d, "frac": t, "rank": rank, "candidate_source": src_pair})
+    points = pd.DataFrame({"gps_row": rows, "n_candidates": n_c, "candidate_source": source})
+    assert (n_c >= 1).all(), "every GPS point must have at least one candidate"
+    return pairs, points

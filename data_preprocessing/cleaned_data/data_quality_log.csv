@@ -19,3 +19,9 @@ stage,partition,item,value,note
 4.3,train,far_label_m,30.0,p99 label distance of well-covered train trips = 29.4 m
 4.3,train,ambiguity_margin_m,5.0,median label distance of well-covered train trips = 4.8 m (one typical GPS error)
 4.3,train,network_checks,90.0,"isolated-node trips=0, route-discontinuity trips=11, mean two-way arc share=0.922"
+4.4,train,cand_max_per_point,50.0,p99 of uncapped count = 46; truncates 0.64% of train points
+4.4,train,miss_rate_final_train_all,0.10182,"final scheme, all train points"
+4.4,train,miss_rate_final_train_clean,0.0,"final scheme, clean labels"
+4.4,train,share_fallback_train,0.0857,points using the 100 m fallback
+4.4,train,share_nearest_k_train,0.0068,points using nearest-K
+4.4,train,miss_rate_final_student_all,0.00151,descriptive only
