@@ -15,6 +15,9 @@ class HealthResponse(BaseModel):
     model_name: str
     model_version: str
     hmm_available: bool
+    hmm_config_name: Optional[str] = None
+    model_sha256: str
+    hmm_config_sha256: Optional[str] = None
     n_trips: int
     uptime_s: float
 
@@ -112,6 +115,10 @@ class ErrorSummaryCounts(BaseModel):
 class HMMFallbacks(BaseModel):
     unreachable_candidates: int = 0
     long_gaps: int = 0
+    breaks: int = 0
+    unreachable_pairs: int = 0
+    gap_relaxed_steps: int = 0
+    missing_candidates: int = 0
 
 
 class LabelQualityShare(BaseModel):
@@ -127,7 +134,6 @@ class ErrorSummary(BaseModel):
     broken_transitions: ErrorSummaryCounts
     hmm_fallbacks: HMMFallbacks
     n_points_hmm_changed: int
-    label_quality_share: LabelQualityShare
 
 
 class PerPointComparison(BaseModel):

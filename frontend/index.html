@@ -31,6 +31,7 @@
 
     <!-- Center: API URL Input and Connection Controls -->
     <div class="api-url-center">
+      <label class="visually-hidden" for="api-url-input">Backend URL</label>
       <input type="text" id="api-url-input" class="input-text" placeholder="http://localhost:8000 or ngrok URL" spellcheck="false" />
       <button id="btn-connect" class="btn btn-primary btn-sm">Connect</button>
       <button id="btn-test-conn" class="btn btn-outline btn-sm">Test connection</button>
@@ -41,11 +42,21 @@
       <div id="connection-pill" class="status-pill disconnected">
         <span class="dot"></span> Not connected
       </div>
+      <span id="connection-detail" class="connection-detail"></span>
     </div>
   </header>
 
   <!-- App Main Content Container -->
   <main class="app-container">
+
+    <section class="page-intro" aria-labelledby="page-title">
+      <div>
+        <div class="eyebrow"><span class="eyebrow-dot"></span> ROUTE EVALUATION</div>
+        <h2 id="page-title">See how the route comes together.</h2>
+        <p>Run a trip to compare classifier and HMM accuracy, continuity, and the resulting routes.</p>
+      </div>
+      <div class="intro-key"><span class="key-line classifier-key"></span> Classifier <span class="key-line hmm-key"></span> HMM</div>
+    </section>
 
     <!-- Control Card -->
     <section class="card control-card">

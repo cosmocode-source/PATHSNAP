@@ -32,6 +32,11 @@ export class TripMap {
 
     const container = document.getElementById(this.containerId);
     if (!container) return;
+    if (typeof L === "undefined") {
+      container.textContent = "Map unavailable. Check your connection to the map library; accuracy results remain available below.";
+      container.classList.add("map-unavailable");
+      return;
+    }
 
     // Create Leaflet map instance
     this.map = L.map(this.containerId, {
@@ -63,6 +68,11 @@ export class TripMap {
     const hmmChangedSet = new Set(comparison.hmm_changed_indices || []);
     const gapSet = new Set(comparison.after_gap_indices || []);
     const stationarySet = new Set(comparison.stationary_indices || []);
+    const diagnosticPoints = res.diagnostic_points || {};
+    const pointsFor = (key, selected) => diagnosticPoints[key] || gpsPoints.flatMap((p, i) => {
+      const index = i * step;
+      return selected.has(index) ? [[index, ...p]] : [];
+    });
 
     // 1. Layer: GPS Observations
     const gpsMarkers = [];
@@ -119,10 +129,7 @@ export class TripMap {
     // 4. Layer: "HMM changed this point" markers (violet rings)
     const changedMarkers = [];
     if (res.hmm_used) {
-      for (let i = 0; i < gpsPoints.length; i++) {
-        const origIdx = i * step;
-        if (hmmChangedSet.has(origIdx)) {
-          const [lat, lon] = gpsPoints[i];
+      for (const [origIdx, lat, lon] of pointsFor("hmm_changed_indices", hmmChangedSet)) {
           const ring = L.circleMarker([lat, lon], {
             radius: 7,
             color: "#A78BFA",
@@ -132,17 +139,13 @@ export class TripMap {
           });
           ring.bindTooltip(`HMM modified arc at #${origIdx}`, { className: "map-tooltip" });
           changedMarkers.push(ring);
-        }
       }
     }
     this.layers.hmmChanged = L.layerGroup(changedMarkers);
 
     // 5. Layer: Points after long gap (Purple)
     const gapMarkers = [];
-    for (let i = 0; i < gpsPoints.length; i++) {
-      const origIdx = i * step;
-      if (gapSet.has(origIdx)) {
-        const [lat, lon] = gpsPoints[i];
+    for (const [origIdx, lat, lon] of pointsFor("after_gap_indices", gapSet)) {
         const m = L.circleMarker([lat, lon], {
           radius: 5,
           fillColor: "#C084FC",
@@ -152,16 +155,12 @@ export class TripMap {
         });
         m.bindTooltip(`After GPS Gap (dt > 5s) at #${origIdx}`, { className: "map-tooltip" });
         gapMarkers.push(m);
-      }
     }
     this.layers.gaps = L.layerGroup(gapMarkers);
 
     // 6. Layer: Stationary points (Grey)
     const stationaryMarkers = [];
-    for (let i = 0; i < gpsPoints.length; i++) {
-      const origIdx = i * step;
-      if (stationarySet.has(origIdx)) {
-        const [lat, lon] = gpsPoints[i];
+    for (const [origIdx, lat, lon] of pointsFor("stationary_indices", stationarySet)) {
         const m = L.circleMarker([lat, lon], {
           radius: 4,
           fillColor: "#94A3B8",
@@ -171,15 +170,14 @@ export class TripMap {
         });
         m.bindTooltip(`Stationary cluster at #${origIdx}`, { className: "map-tooltip" });
         stationaryMarkers.push(m);
-      }
     }
     this.layers.stationary = L.layerGroup(stationaryMarkers);
 
     // 7. Layer: Start & End endpoints
     const endpointMarkers = [];
     if (gpsPoints.length > 0) {
-      const startPt = gpsPoints[0];
-      const endPt = gpsPoints[gpsPoints.length - 1];
+      const startPt = res.gps_endpoints?.[0] || gpsPoints[0];
+      const endPt = res.gps_endpoints?.[1] || gpsPoints[gpsPoints.length - 1];
 
       const startMarker = L.circleMarker(startPt, {
         radius: 8,

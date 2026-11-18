@@ -5,8 +5,11 @@ Loads the classifier model, feature definitions, and dynamic HMM decoder.
 from __future__ import annotations
 
 import importlib
+import hashlib
+import inspect
 import json
 import logging
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -14,6 +17,10 @@ from typing import Any, Callable, Dict, List, Optional
 import lightgbm as lgb
 
 logger = logging.getLogger("pathsnap.api")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+FINAL_HMM_MODULE = "trained_models.hmm.api_adapter:decode_trip"
 
 
 @dataclass
@@ -23,6 +30,7 @@ class ModelBundle:
     config: Dict[str, Any]
     name: str
     version: str
+    model_hash: str
 
 
 def load_model_bundle(model_dir: Path) -> ModelBundle:
@@ -46,7 +54,9 @@ def load_model_bundle(model_dir: Path) -> ModelBundle:
 
     model_name = cfg.get("model", "LightGBM")
     model_version = cfg.get("version", "1.0.0")
-    if model_version == "1.0.0" and "seeds" in cfg:
+    if "variant" in cfg and "seed" in cfg:
+        model_version = f"{cfg['variant']}-seed-{cfg['seed']}"
+    elif model_version == "1.0.0" and "seeds" in cfg:
         model_version = f"seed-{cfg['seeds'][0]}"
 
     # Locate the model file (lightgbm_model.txt or any .txt/.model in dir)
@@ -60,7 +70,9 @@ def load_model_bundle(model_dir: Path) -> ModelBundle:
 
     # Read binary and convert CRLF to LF to prevent LightGBM tree_sizes byte offset bug on Windows
     with open(model_txt, "rb") as f:
-        raw_bytes = f.read().replace(b"\r\n", b"\n")
+        file_bytes = f.read()
+    model_hash = hashlib.sha256(file_bytes).hexdigest()[:12]
+    raw_bytes = file_bytes.replace(b"\r\n", b"\n")
 
     model_str = raw_bytes.decode("utf-8")
     booster = lgb.Booster(model_str=model_str)
@@ -72,6 +84,7 @@ def load_model_bundle(model_dir: Path) -> ModelBundle:
         config=cfg,
         name=model_name,
         version=model_version,
+        model_hash=model_hash,
     )
 
 
@@ -97,6 +110,10 @@ def load_hmm_decoder(module_spec: Optional[str]) -> Optional[Callable]:
 
     try:
         spec = module_spec.strip()
+        # Never let a test stub or another implementation be presented as the
+        # evaluated final HMM. Classifier-only mode remains available explicitly.
+        if spec != FINAL_HMM_MODULE:
+            raise ValueError("HMM_MODULE must name the final decoder from COMPARISON_REPORT.md")
         if ":" not in spec:
             raise ValueError(f"Invalid HMM_MODULE specification: '{spec}'. Must be 'module.path:function_name'.")
         mod_name, fn_name = spec.split(":", 1)
@@ -104,8 +121,27 @@ def load_hmm_decoder(module_spec: Optional[str]) -> Optional[Callable]:
         fn = getattr(mod, fn_name)
         if not callable(fn):
             raise TypeError(f"Target '{fn_name}' in '{mod_name}' is not callable.")
+        if list(inspect.signature(fn).parameters) != ["candidates", "probs", "network", "gps_xy", "times", "config"]:
+            raise ValueError("HMM decoder has an incompatible signature")
         logger.info(f"Loaded HMM decoder: {spec}")
         return fn
     except Exception as e:
-        logger.warning(f"Could not load HMM decoder from '{module_spec}': {e}. Falling back to classifier-only mode.")
-        return None
+        raise RuntimeError(f"Configured HMM decoder could not be loaded: {e}") from e
+
+
+def load_hmm_config(path: Optional[Path]) -> tuple[dict, str]:
+    """Validate the exact frozen config used by the immutable API adapter."""
+    if path is None or not path.is_file():
+        raise ValueError("HMM_CONFIG must point to an existing decoder config.json")
+    expected = REPO_ROOT / "trained_models" / "hmm" / "config.json"
+    if path.resolve() != expected.resolve():
+        raise ValueError("HMM_CONFIG must point to trained_models/hmm/config.json for the final adapter")
+    raw = path.read_bytes()
+    try:
+        config = json.loads(raw)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("HMM_CONFIG is not valid JSON") from exc
+    required = {"alpha", "eps", "beta", "u_turn_penalty", "gap_beta_factor", "gap_seconds", "v_max_mps", "min_cutoff_m", "hmm_top_k", "backward_tolerance_m", "unreachable_logp"}
+    if not isinstance(config, dict) or not required.issubset(config):
+        raise ValueError("HMM_CONFIG is missing required decoder settings")
+    return config, hashlib.sha256(raw).hexdigest()[:12]

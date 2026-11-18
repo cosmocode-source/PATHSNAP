@@ -126,26 +126,27 @@ class AppState {
     const nDone = finishedRows.length;
     let totalTime = 0;
     const totals = {
-      top1_all: { clf: 0, hmm: 0 },
-      top1_in_cands: { clf: 0, hmm: 0 },
-      top1_clean: { clf: 0, hmm: 0 },
-      route_continuity: { clf: 0, hmm: 0 },
-      sequence_arc_f1: { clf: 0, hmm: 0 },
-      sequence_length_weighted_mismatch: { clf: 0, hmm: 0 },
+      top1_all: {}, top1_in_cands: {}, top1_clean: {}, route_continuity: {},
+      sequence_arc_f1: {}, sequence_length_weighted_mismatch: {},
     };
-
+    for (const key of Object.keys(totals)) totals[key] = { clf: 0, clfCount: 0, hmm: 0, pairClf: 0, pairCount: 0 };
     let hmmCount = 0;
 
     for (const r of finishedRows) {
       totalTime += r.result.total_runtime_s || 0;
       const m = r.result.metrics;
       const c = m.classifier;
-      const h = m.hmm;
+      const h = r.result.hmm_used ? m.hmm : null;
 
       for (const k of Object.keys(totals)) {
-        totals[k].clf += c[k] || 0;
-        if (h && typeof h[k] === "number" && !isNaN(h[k])) {
+        if (Number.isFinite(c[k])) {
+          totals[k].clf += c[k];
+          totals[k].clfCount++;
+        }
+        if (h && Number.isFinite(h[k]) && Number.isFinite(c[k])) {
           totals[k].hmm += h[k];
+          totals[k].pairClf += c[k];
+          totals[k].pairCount++;
         }
       }
       if (h) hmmCount++;
@@ -154,9 +155,10 @@ class AppState {
     const averages = {};
     for (const k of Object.keys(totals)) {
       averages[k] = {
-        classifier: totals[k].clf / nDone,
-        hmm: hmmCount ? totals[k].hmm / hmmCount : null,
-        delta: hmmCount ? (totals[k].hmm / hmmCount) - (totals[k].clf / nDone) : null,
+        classifier: totals[k].clfCount ? totals[k].clf / totals[k].clfCount : null,
+        pairedClassifier: totals[k].pairCount ? totals[k].pairClf / totals[k].pairCount : null,
+        hmm: totals[k].pairCount ? totals[k].hmm / totals[k].pairCount : null,
+        delta: totals[k].pairCount ? (totals[k].hmm - totals[k].pairClf) / totals[k].pairCount : null,
       };
     }
 
@@ -166,6 +168,7 @@ class AppState {
       totalTime: totalTime.toFixed(2),
       averages,
       hasHmm: hmmCount > 0,
+      hmmCount,
     };
   }
 }

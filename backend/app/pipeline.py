@@ -119,6 +119,7 @@ def run_pipeline(
     max_display_points: int = 1000,
     stage_callback: Optional[Callable[[str, float], None]] = None,
     prep_config: Optional[Dict[str, Any]] = None,
+    hmm_config: Optional[Dict[str, Any]] = None,
 ) -> PipelinePrediction:
     """Run full route-free inference pipeline for one trip.
 
@@ -206,7 +207,7 @@ def run_pipeline(
     # -------------------------------------------------------------------------
     t0 = time.perf_counter()
     try:
-        raw_probs = model_bundle.booster.predict(X)
+        raw_probs = model_bundle.booster.predict(X, num_threads=2)
     except Exception as e:
         raise AppError(ErrorCode.PIPELINE_FAILED, f"Model prediction failed: {e}", stage="classifier", trip_id=trip_id)
 
@@ -235,7 +236,8 @@ def run_pipeline(
     t0 = time.perf_counter()
     hmm_arcs: Optional[np.ndarray] = None
     hmm_used = False
-    hmm_fallbacks = {"unreachable_candidates": 0, "long_gaps": 0}
+    hmm_fallbacks = {"unreachable_candidates": 0, "long_gaps": 0, "breaks": 0,
+                     "unreachable_pairs": 0, "gap_relaxed_steps": 0, "missing_candidates": 0}
 
     if hmm_decoder is not None:
         try:
@@ -253,21 +255,27 @@ def run_pipeline(
                 network=network,
                 gps_xy=trip.gps_xy,
                 times=trip.gps_t,
-                config=cfg,
+                config=hmm_config if hmm_config is not None else cfg,
             )
             hmm_arcs = np.asarray(hmm_res["arc_per_point"], dtype=np.int64)
+            if hmm_arcs.shape != (n_points,) or np.any(hmm_arcs < 0) or np.any(hmm_arcs >= len(trip.arcs)):
+                raise ValueError("HMM returned an invalid arc sequence")
             diag = hmm_res.get("diagnostics", {})
-            n_unreach = int(diag.get("fallbacks_unreachable", diag.get("n_breaks", diag.get("n_unreachable_pairs", 0))))
+            n_unreach = int(diag.get("fallbacks_unreachable", diag.get("n_breaks", 0)))
             n_gaps = int(diag.get("fallbacks_gap", diag.get("n_gap_relaxed_steps", 0)))
             hmm_fallbacks = {
                 "unreachable_candidates": n_unreach,
                 "long_gaps": n_gaps,
+                "breaks": int(diag.get("n_breaks", n_unreach)),
+                "unreachable_pairs": int(diag.get("n_unreachable_pairs", 0)),
+                "gap_relaxed_steps": n_gaps,
+                "missing_candidates": int(diag.get("n_missing_candidates", 0)),
             }
             hmm_used = True
-            if hmm_fallbacks["unreachable_candidates"] > 0 or hmm_fallbacks["long_gaps"] > 0:
+            if hmm_fallbacks["breaks"] > 0 or hmm_fallbacks["missing_candidates"] > 0:
                 warnings.append(
-                    f"HMM fell back {hmm_fallbacks['unreachable_candidates'] + hmm_fallbacks['long_gaps']} times "
-                    f"({hmm_fallbacks['unreachable_candidates']} unreachable, {hmm_fallbacks['long_gaps']} long gaps)."
+                    f"HMM restarted {hmm_fallbacks['breaks']} times; "
+                    f"{hmm_fallbacks['missing_candidates']} points lacked candidates."
                 )
         except Exception as e:
             if strict_hmm:

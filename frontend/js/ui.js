@@ -160,6 +160,8 @@ export function renderConnectionStatus(status, healthData) {
     pill.classList.add("disconnected");
     pill.innerHTML = `<span class="dot"></span> Not connected`;
   }
+  const detail = document.getElementById("connection-detail");
+  if (detail) detail.textContent = healthData ? `${healthData.model_name} · ${healthData.model_version}${healthData.hmm_config_name ? ` · ${healthData.hmm_config_name}` : ""}` : "";
 }
 
 // Render Summary Strip
@@ -176,11 +178,11 @@ export function renderSummaryStrip(stats) {
   const avg = stats.averages;
   const hasHmm = stats.hasHmm;
 
-  const top1Clf = formatPct(avg.top1_all.classifier);
+  const top1Clf = formatPct(hasHmm ? avg.top1_all.pairedClassifier : avg.top1_all.classifier);
   const top1Hmm = hasHmm ? formatPct(avg.top1_all.hmm) : null;
-  const contClf = formatPct(avg.route_continuity.classifier);
+  const contClf = formatPct(hasHmm ? avg.route_continuity.pairedClassifier : avg.route_continuity.classifier);
   const contHmm = hasHmm ? formatPct(avg.route_continuity.hmm) : null;
-  const f1Clf = formatFloat(avg.sequence_arc_f1.classifier);
+  const f1Clf = formatFloat(hasHmm ? avg.sequence_arc_f1.pairedClassifier : avg.sequence_arc_f1.classifier);
   const f1Hmm = hasHmm ? formatFloat(avg.sequence_arc_f1.hmm) : null;
 
   let deltaTop1Html = "";
@@ -198,7 +200,7 @@ export function renderSummaryStrip(stats) {
         <span class="summary-value">${hasHmm ? top1Hmm : top1Clf}</span>
         ${deltaTop1Html}
       </div>
-      <div class="summary-sub">${hasHmm ? `Classifier: ${top1Clf}` : "Headline unweighted"}</div>
+      <div class="summary-sub">${hasHmm ? `Classifier: ${top1Clf} · HMM on ${stats.hmmCount}/${stats.nDone} trips` : "Mean across completed trips"}</div>
     </div>
 
     <div class="summary-metric-card">
@@ -251,7 +253,9 @@ export function renderTripRows(tripRows, onRowToggle, onRerunTrip) {
     return;
   }
 
-  // Preserve existing map nodes or re-render
+  // Tear maps down before replacing their DOM containers, then recreate them.
+  for (const map of activeMaps.values()) map.destroy();
+  activeMaps.clear();
   container.innerHTML = "";
 
   for (const row of rows) {
@@ -363,6 +367,8 @@ function createTripRowElement(row, onRowToggle, onRerunTrip) {
 
     if (isFailed) {
       bodyEl.innerHTML = renderFailedPanel(row, onRerunTrip);
+      bodyEl.querySelector(".btn-retry-trip")?.addEventListener("click", () => onRerunTrip(row.trip_id));
+      bodyEl.querySelector(".btn-copy-error")?.addEventListener("click", () => copyToClipboard(JSON.stringify(row.error || {})));
     } else if (isDone) {
       bodyEl.innerHTML = renderExpandedPanelContent(res, onRerunTrip);
       attachExpandedPanelEvents(bodyEl, res, onRerunTrip);
@@ -415,8 +421,8 @@ function renderFailedPanel(row, onRerunTrip) {
 function renderExpandedPanelContent(res, onRerunTrip) {
   const m = res.metrics;
   const clf = m.classifier;
-  const hmm = m.hmm;
-  const d = m.delta;
+  const hmm = res.hmm_used ? m.hmm : null;
+  const d = res.hmm_used ? m.delta : null;
   const errSum = res.error_summary || {};
   const dq = res.data_quality_context || {};
   const warnings = res.warnings || [];
@@ -558,22 +564,16 @@ function renderExpandedPanelContent(res, onRerunTrip) {
               <td>Disconnected consecutive arcs</td>
             </tr>
             <tr>
-              <td>HMM Fallbacks</td>
+              <td>HMM transitions</td>
               <td>-</td>
-              <td>${errSum.hmm_fallbacks ? `${errSum.hmm_fallbacks.unreachable_candidates} unreachable, ${errSum.hmm_fallbacks.long_gaps} gaps` : "-"}</td>
-              <td>Transitions where fallback applied</td>
+              <td>${errSum.hmm_fallbacks ? `${errSum.hmm_fallbacks.breaks} breaks, ${errSum.hmm_fallbacks.gap_relaxed_steps} relaxed gaps` : "-"}</td>
+              <td>Chain restarts and gap relaxation</td>
             </tr>
             <tr>
               <td>Points Changed by HMM</td>
               <td>-</td>
               <td>${errSum.n_points_hmm_changed != null ? errSum.n_points_hmm_changed : "-"}</td>
               <td>Points where HMM picked different arc</td>
-            </tr>
-            <tr>
-              <td>Label Quality Breakdown</td>
-              <td colspan="3">
-                ${errSum.label_quality_share ? `Clean: ${(errSum.label_quality_share.clean * 100).toFixed(1)}% | Ambiguous: ${(errSum.label_quality_share.ambiguous * 100).toFixed(1)}% | Far: ${(errSum.label_quality_share.far * 100).toFixed(1)}%` : "-"}
-              </td>
             </tr>
           </tbody>
         </table>

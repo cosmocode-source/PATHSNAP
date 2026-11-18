@@ -1,0 +1,59 @@
+[
+  {
+    "kind": "largest_network",
+    "trip_id": "00000013",
+    "n_gps": 2580,
+    "n_arcs": 307392,
+    "runtime_s": 3.695,
+    "timings_s": {
+      "loading_trip": 0.4022,
+      "candidates": 0.9927,
+      "features": 0.0029,
+      "classifier": 0.1054,
+      "hmm": 1.3438,
+      "building_geometry": 0.0425,
+      "scoring": 0.7997
+    },
+    "peak_process_working_set_mb": 443.34,
+    "hmm_fallbacks": {
+      "unreachable_candidates": 4,
+      "long_gaps": 31,
+      "breaks": 4,
+      "unreachable_pairs": 140242,
+      "gap_relaxed_steps": 31,
+      "missing_candidates": 0
+    },
+    "warnings": [
+      "HMM restarted 4 times; 0 points lacked candidates."
+    ]
+  },
+  {
+    "kind": "largest_train_trip",
+    "trip_id": "00000054",
+    "n_gps": 19313,
+    "n_arcs": 116916,
+    "runtime_s": 13.275,
+    "timings_s": {
+      "loading_trip": 0.1859,
+      "candidates": 1.1894,
+      "features": 0.0064,
+      "classifier": 0.5887,
+      "hmm": 8.3346,
+      "building_geometry": 0.0638,
+      "scoring": 2.8821
+    },
+    "peak_process_working_set_mb": 448.54,
+    "hmm_fallbacks": {
+      "unreachable_candidates": 156,
+      "long_gaps": 6,
+      "breaks": 156,
+      "unreachable_pairs": 566800,
+      "gap_relaxed_steps": 6,
+      "missing_candidates": 0
+    },
+    "warnings": [
+      "HMM restarted 156 times; 0 points lacked candidates.",
+      "89.4% of observations have poor reference alignment; accuracy may understate prediction quality."
+    ]
+  }
+]

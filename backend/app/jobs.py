@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import concurrent.futures
 import datetime
+import hashlib
 import threading
 import time
 import uuid
@@ -84,6 +85,12 @@ class JobManager:
             thread_name_prefix="pathsnap-worker",
         )
 
+    def ensure_executor(self) -> None:
+        """Allow application lifespan to restart in a test or embedded server."""
+        if getattr(self.executor, "_shutdown", False):
+            self.executor = concurrent.futures.ThreadPoolExecutor(
+                max_workers=settings.MAX_WORKERS, thread_name_prefix="pathsnap-worker")
+
     def cleanup_old_jobs(self) -> None:
         """Remove jobs older than JOB_TTL_MINUTES."""
         now = datetime.datetime.now(datetime.timezone.utc)
@@ -110,12 +117,20 @@ class JobManager:
         job: Job,
         model_bundle: ModelBundle,
         hmm_decoder: Optional[Callable],
+        hmm_config: Optional[dict] = None,
+        hmm_config_hash: Optional[str] = None,
         refresh: bool = False,
     ) -> None:
-        hmm_version = "custom" if hmm_decoder else "none"
-        cache_key = (job.trip_id, model_bundle.version, hmm_version)
+        hmm_version = hmm_config_hash if hmm_decoder else "none"
+        cache_key = (job.trip_id, model_bundle.model_hash, hmm_version, str(settings.TRIPS_DIR))
 
-        if not refresh:
+        config_unchanged = True
+        if hmm_decoder is not None and hmm_config is not None:
+            try:
+                config_unchanged = hashlib.sha256(settings.HMM_CONFIG.read_bytes()).hexdigest()[:12] == hmm_config_hash
+            except OSError:
+                config_unchanged = False
+        if not refresh and config_unchanged:
             with self.lock:
                 if cache_key in self.result_cache:
                     cached = dict(self.result_cache[cache_key])
@@ -139,6 +154,7 @@ class JobManager:
             job,
             model_bundle,
             hmm_decoder,
+            hmm_config,
             cache_key,
         )
 
@@ -147,6 +163,7 @@ class JobManager:
         job: Job,
         model_bundle: ModelBundle,
         hmm_decoder: Optional[Callable],
+        hmm_config: Optional[dict],
         cache_key: Tuple[str, str, str],
     ) -> None:
         job.status = "running"
@@ -161,12 +178,23 @@ class JobManager:
             # Check timeout wrapper
             t_start = time.perf_counter()
 
+            # The immutable adapter rereads its config on each call. Refuse a
+            # changed file rather than report a stale startup fingerprint.
+            if hmm_decoder is not None and hmm_config is not None:
+                try:
+                    current = hashlib.sha256(settings.HMM_CONFIG.read_bytes()).hexdigest()[:12]
+                except OSError as exc:
+                    raise AppError(ErrorCode.HMM_UNAVAILABLE, "Decoder configuration is unavailable; restart the API.", stage="hmm") from exc
+                if current != cache_key[2]:
+                    raise AppError(ErrorCode.HMM_UNAVAILABLE, "Decoder configuration changed; restart the API.", stage="hmm")
+
             # 1. Run inference pipeline
             prediction = run_pipeline(
                 trip_id=job.trip_id,
                 trips_dir=settings.TRIPS_DIR,
                 model_bundle=model_bundle,
                 hmm_decoder=hmm_decoder,
+                hmm_config=hmm_config,
                 strict_hmm=settings.STRICT_HMM,
                 max_display_points=settings.MAX_DISPLAY_POINTS,
                 stage_callback=on_stage_progress,
@@ -186,6 +214,8 @@ class JobManager:
                 prediction=prediction,
                 trips_dir=settings.TRIPS_DIR,
             )
+            if time.perf_counter() - t_start > settings.TRIP_TIMEOUT_S:
+                raise AppError(ErrorCode.TIMEOUT, f"Trip processing exceeded timeout of {settings.TRIP_TIMEOUT_S} s.", stage="scoring", trip_id=job.trip_id)
             on_stage_progress("scoring", prediction.stage_timings.get("scoring", 0.0))
 
             total_s = time.perf_counter() - job.start_time
@@ -217,6 +247,13 @@ class JobManager:
                 },
                 "gps": prediction.display_gps,
                 "display_downsample_step": prediction.display_downsample_step,
+                # Diagnostic markers retain their real GPS coordinates even
+                # when the visible GPS trace is downsampled.
+                "diagnostic_points": {
+                    key: [[int(i), *prediction.raw_gps[i]] for i in prediction.per_point_comparison[key]]
+                    for key in ("hmm_changed_indices", "after_gap_indices", "stationary_indices")
+                },
+                "gps_endpoints": [prediction.raw_gps[0], prediction.raw_gps[-1]] if prediction.raw_gps else [],
                 "metrics": scoring_res["metrics"],
                 "error_summary": scoring_res["error_summary"],
                 "per_point_comparison": prediction.per_point_comparison,
@@ -227,8 +264,10 @@ class JobManager:
             job.status = "done"
             job.result = result
 
-            with self.lock:
-                self.result_cache[cache_key] = result
+            # Do not cache a classifier-only fallback under an HMM cache key.
+            if hmm_decoder is None or prediction.hmm_used:
+                with self.lock:
+                    self.result_cache[cache_key] = result
 
             top1_clf = scoring_res["metrics"]["classifier"]["top1_all"] * 100
             if prediction.hmm_used and scoring_res["metrics"]["hmm"]:

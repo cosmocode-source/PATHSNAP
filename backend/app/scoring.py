@@ -16,12 +16,15 @@ import numpy as np
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 PREP_DIR = REPO_ROOT / "data_preprocessing" / "data_preprocessing"
 if str(PREP_DIR) not in sys.path:
     sys.path.insert(0, str(PREP_DIR))
 
 import pathsnap_prep  # noqa: E402
 from pathsnap_prep import CONFIG as DEFAULT_PREP_CONFIG  # noqa: E402
+from trained_models.common.metrics import lcs_length  # noqa: E402
 
 from .errors import AppError, ErrorCode
 from .pipeline import PipelinePrediction
@@ -35,7 +38,9 @@ def _compute_sequence_metrics(
     """Compute arc precision, recall, F1, and length-weighted route mismatch fraction."""
     c_pred = collections.Counter(pred_seq)
     c_ref = collections.Counter(ref_seq)
-    overlap = sum((c_pred & c_ref).values())
+    # The final comparison uses the ordered longest common subsequence, not
+    # unordered multiset overlap, for precision, recall and F1.
+    overlap = lcs_length(np.asarray(pred_seq, dtype=np.int64), np.asarray(ref_seq, dtype=np.int64))
     n_p = max(len(pred_seq), 1)
     n_r = max(len(ref_seq), 1)
 
@@ -120,7 +125,7 @@ def score_prediction(
     if label_quality_share["far"] >= 0.05:
         pct = round(label_quality_share["far"] * 100, 1)
         prediction.warnings.append(
-            f"{pct}% of reference labels are far from the track, so accuracy vs the reference may understate prediction quality."
+            f"{pct}% of observations have poor reference alignment; accuracy may understate prediction quality."
         )
 
     arcs_uv = prediction.arcs_df[["u", "v"]].to_numpy()
@@ -205,7 +210,6 @@ def score_prediction(
         },
         "hmm_fallbacks": prediction.hmm_fallbacks,
         "n_points_hmm_changed": len(prediction.per_point_comparison["hmm_changed_indices"]),
-        "label_quality_share": label_quality_share,
     }
 
     prediction.stage_timings["scoring"] = time.perf_counter() - t0

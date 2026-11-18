@@ -26,12 +26,15 @@ class Settings(BaseSettings):
     # Folder with the trips to serve (default ../Dataset/student_test)
     TRIPS_DIR: Path = BACKEND_DIR.parent / "Dataset" / "student_test"
 
-    # Folder with the model files (default ../trained_models/model4)
-    MODEL_DIR: Path = BACKEND_DIR.parent / "trained_models" / "model4"
+    # The frozen untuned classifier selected by the comparison report.
+    MODEL_DIR: Path = BACKEND_DIR.parent / "trained_models" / "final_model"
 
     # Python path of the HMM decoder (format "module.path:function_name").
     # If blank or cannot be imported, API starts with hmm_available=false.
     HMM_MODULE: Optional[str] = None
+
+    # Explicit path to the frozen decoder settings; required when HMM is enabled.
+    HMM_CONFIG: Optional[Path] = None
 
     # If true, an HMM failure fails the trip; if false, returns classifier-only with warning.
     STRICT_HMM: bool = False
@@ -60,9 +63,11 @@ class Settings(BaseSettings):
     # Ngrok auth token (optional, from environment only)
     NGROK_AUTHTOKEN: Optional[str] = None
 
-    @field_validator("TRIPS_DIR", "MODEL_DIR", mode="before")
+    @field_validator("TRIPS_DIR", "MODEL_DIR", "HMM_CONFIG", mode="before")
     @classmethod
     def resolve_path(cls, v: Union[str, Path]) -> Path:
+        if v is None or v == "":
+            return None
         p = Path(v)
         if not p.is_absolute():
             p = (BACKEND_DIR / p).resolve()

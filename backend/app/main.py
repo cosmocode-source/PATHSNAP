@@ -19,7 +19,7 @@ from .config import settings
 from .errors import AppError, ErrorCode, app_error_handler
 from .jobs import job_manager
 from .logging_setup import get_recent_logs, log_request, logger
-from .model_loader import ModelBundle, load_hmm_decoder, load_model_bundle
+from .model_loader import ModelBundle, load_hmm_config, load_hmm_decoder, load_model_bundle
 from .schemas import (
     HealthResponse,
     JobStatusResponse,
@@ -34,6 +34,8 @@ app_state: Dict[str, Any] = {
     "start_time": 0.0,
     "model_bundle": None,
     "hmm_decoder": None,
+    "hmm_config": None,
+    "hmm_config_hash": None,
     "indexed_trips": {},  # trip_id -> TripInfo dict
 }
 
@@ -73,9 +75,10 @@ def _index_trips_directory(trips_dir: Path) -> Dict[str, Dict[str, Any]]:
 async def lifespan(app: FastAPI):
     """Load model, HMM config, and index trips once at startup."""
     app_state["start_time"] = time.perf_counter()
+    job_manager.ensure_executor()
 
     # 1. Load model bundle
-    logger.info(f"Loading classifier model from: {settings.MODEL_DIR}")
+    logger.info("Loading classifier model from configured model directory")
     try:
         model_bundle = load_model_bundle(settings.MODEL_DIR)
         app_state["model_bundle"] = model_bundle
@@ -83,12 +86,17 @@ async def lifespan(app: FastAPI):
         logger.critical(f"FATAL: Failed to load model bundle: {e}")
         raise
 
-    # 2. Load HMM decoder (lazy / optional)
+    # 2. Load and validate the frozen config once in the backend process.
+    app_state["hmm_config"] = None
+    app_state["hmm_config_hash"] = None
+    if settings.HMM_MODULE or settings.HMM_CONFIG:
+        app_state["hmm_config"], app_state["hmm_config_hash"] = load_hmm_config(settings.HMM_CONFIG)
+    # The current adapter independently rereads this same file; see README.
     hmm_decoder = load_hmm_decoder(settings.HMM_MODULE)
     app_state["hmm_decoder"] = hmm_decoder
 
     # 3. Index trips directory
-    logger.info(f"Indexing trips folder: {settings.TRIPS_DIR}")
+    logger.info("Indexing configured trips folder")
     try:
         indexed_trips = _index_trips_directory(settings.TRIPS_DIR)
         app_state["indexed_trips"] = indexed_trips
@@ -191,6 +199,9 @@ def get_health(request: Request):
         model_name=bundle.name,
         model_version=bundle.version,
         hmm_available=app_state["hmm_decoder"] is not None,
+        hmm_config_name=settings.HMM_CONFIG.name if app_state["hmm_config"] is not None else None,
+        model_sha256=bundle.model_hash,
+        hmm_config_sha256=app_state["hmm_config_hash"],
         n_trips=len(app_state["indexed_trips"]),
         uptime_s=round(uptime, 2),
     )
@@ -240,6 +251,8 @@ def predict_trip(req: PredictRequest, request: Request):
         job=job,
         model_bundle=bundle,
         hmm_decoder=app_state["hmm_decoder"],
+        hmm_config=app_state["hmm_config"],
+        hmm_config_hash=app_state["hmm_config_hash"],
         refresh=req.refresh,
     )
     return PredictResponse(job_id=job.job_id)
