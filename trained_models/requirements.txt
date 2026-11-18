@@ -1,0 +1,16 @@
+# Python 3.12 environment for the modelling stage (trained_models/).
+# Install:  py -3.12 -m venv .venv
+#           .venv\Scripts\python -m pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
+#           .venv\Scripts\python -m pip install -r trained_models/requirements.txt
+numpy==2.5.5
+pandas==3.1.1
+pyarrow==26.0.1
+scikit-learn==1.9.1
+lightgbm==4.7.0
+joblib==1.6.0
+matplotlib==3.11.2
+shapely==2.2.0      # needed by pathsnap_prep (rebuilding the scaled train table)
+pyproj==3.8.0       # needed by pathsnap_prep
+jupyter
+nbconvert==7.17.2
+ipykernel

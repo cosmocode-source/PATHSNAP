@@ -1,0 +1,13 @@
+2026-11-18 15:16:09  === Logistic Regression (Linear / probabilistic) | seeds [42] | table scaled ===
+2026-11-18 15:16:09  python 3.12.6 on Windows-11-10.0.26200-SP0
+2026-11-18 15:16:09  [train] 208,417 points, 1,943,052 candidate rows, miss rate 0.1037, fit_include rows 1,814,286
+2026-11-18 15:16:09  [student] 19,160 points, 207,713 candidate rows, miss rate 0.0015, fit_include rows 207,713
+2026-11-18 15:16:12  seed 42 fold 0: fit     2.3s  rows 1,443,750  top1_all 0.8210  top1_in_cands 0.8254  macroF1 0.9011  ll_raw 0.1951  ll_norm 0.7317
+2026-11-18 15:16:15  seed 42 fold 1: fit     2.4s  rows 1,368,322  top1_all 0.8746  top1_in_cands 0.8762  macroF1 0.9294  ll_raw 0.2100  ll_norm 0.7088
+2026-11-18 15:16:18  seed 42 fold 2: fit     2.7s  rows 1,457,100  top1_all 0.5439  top1_in_cands 0.8091  macroF1 0.8066  ll_raw 0.2182  ll_norm 0.7460
+2026-11-18 15:16:21  seed 42 fold 3: fit     2.8s  rows 1,520,044  top1_all 0.7623  top1_in_cands 0.8533  macroF1 0.8922  ll_raw 0.2218  ll_norm 0.9260
+2026-11-18 15:16:23  seed 42 fold 4: fit     2.2s  rows 1,467,928  top1_all 0.7903  top1_in_cands 0.8093  macroF1 0.8902  ll_raw 0.1874  ll_norm 0.7824
+2026-11-18 15:16:30  seed 42 final fit: 2.8s on 1,814,286 rows
+2026-11-18 15:16:32  seed 42 student: top1_all 0.8326  macroF1 0.9081  ll_norm 0.7357  continuity 0.6997  inference 0.2 ms / 1,000 points
+2026-11-18 15:16:33  CV top1_all 0.7584 +/- 0.1269 | student top1_all 0.8326 | total 23.4s
+2026-11-18 15:16:33  outputs written to C:\Users\shiva\PATHSNAP\trained_models\model1
