@@ -91,8 +91,9 @@ def test_prediction_signature_has_no_route_parameter():
 
 
 def test_predict_and_poll_end_to_end(client):
-    """End-to-end predict and poll on a dev trip (00000052)."""
-    trip_id = "00000052"
+    """End-to-end predict and poll on a loaded trip."""
+    trips = client.get("/api/trips").json()
+    trip_id = trips[0]["trip_id"]
     # Initiate prediction
     post_resp = client.post("/api/predict", json={"trip_id": trip_id, "refresh": True})
     assert post_resp.status_code == 202
@@ -129,7 +130,8 @@ def test_predict_and_poll_end_to_end(client):
 
 def test_privacy_and_no_route_leakage(client):
     """Assert result JSON contains NO reference route, reference labels, or per-point correctness arrays."""
-    trip_id = "00000052"
+    trips = client.get("/api/trips").json()
+    trip_id = trips[0]["trip_id"]
     resp = client.post("/api/predict", json={"trip_id": trip_id, "refresh": False})
     job_id = resp.json()["job_id"]
 
@@ -173,7 +175,9 @@ def test_stub_hmm_integration_and_changed_indices(client):
     app_state["hmm_decoder"] = stub_decode_trip
 
     try:
-        trip_id = "00000052"
+        trips = client.get("/api/trips").json()
+        assert len(trips) > 0
+        trip_id = trips[0]["trip_id"]
         resp = client.post("/api/predict", json={"trip_id": trip_id, "refresh": True})
         job_id = resp.json()["job_id"]
 
@@ -235,8 +239,9 @@ def test_route_continuity_parity():
     from common import metrics
     from app.scoring import _compute_route_continuity
 
+    student_dir = BACKEND_DIR.parent / "Dataset" / "student_test"
     for trip_id in ["00000052", "00000000"]:
-        arcs_file = settings.TRIPS_DIR / trip_id / f"{trip_id}.arcs"
+        arcs_file = student_dir / trip_id / f"{trip_id}.arcs"
         arcs_uv = pd.read_csv(arcs_file, sep=r"\s+", header=None, names=["u", "v"], dtype=int).to_numpy()
 
         pred_file = BACKEND_DIR.parent / "trained_models" / "model4" / "student_predictions.parquet"
@@ -263,8 +268,11 @@ def test_route_continuity_parity():
 
 
 def test_largest_trip_stress(client):
-    """Trip 00000076 (624k arcs / 532k nodes) runs end to end within timeout."""
-    trip_id = "00000076"
+    """Stress test the largest trip in the configured TRIPS_DIR runs end to end within timeout."""
+    trips = client.get("/api/trips").json()
+    assert len(trips) > 0
+    largest_trip = max(trips, key=lambda t: t.get("n_arcs", 0))
+    trip_id = largest_trip["trip_id"]
     t0 = time.perf_counter()
     resp = client.post("/api/predict", json={"trip_id": trip_id, "refresh": True})
     assert resp.status_code == 202
