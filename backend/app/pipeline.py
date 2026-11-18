@@ -124,7 +124,23 @@ def run_pipeline(
 
     Never loads or references .route.
     """
-    cfg = prep_config or DEFAULT_PREP_CONFIG
+    # Preprocessing / HMM default configs
+    hmm_defaults = {
+        "alpha": 1.0,
+        "eps": 1e-12,
+        "beta": 30.0,
+        "u_turn_penalty": 2.0,
+        "gap_beta_factor": 3.0,
+        "gap_seconds": 5.0,
+        "v_max_mps": 50.0,
+        "min_cutoff_m": 100.0,
+        "hmm_top_k": 15,
+        "backward_tolerance_m": 5.0,
+        "unreachable_logp": -1000000.0,
+        "cutoff_bucket_m": 25.0,
+        "cache_size": 512,
+    }
+    cfg = {**hmm_defaults, **(prep_config or DEFAULT_PREP_CONFIG)}
     timings: Dict[str, float] = {}
     warnings: List[str] = []
 
@@ -241,9 +257,11 @@ def run_pipeline(
             )
             hmm_arcs = np.asarray(hmm_res["arc_per_point"], dtype=np.int64)
             diag = hmm_res.get("diagnostics", {})
+            n_unreach = int(diag.get("fallbacks_unreachable", diag.get("n_breaks", diag.get("n_unreachable_pairs", 0))))
+            n_gaps = int(diag.get("fallbacks_gap", diag.get("n_gap_relaxed_steps", 0)))
             hmm_fallbacks = {
-                "unreachable_candidates": int(diag.get("fallbacks_unreachable", 0)),
-                "long_gaps": int(diag.get("fallbacks_gap", 0)),
+                "unreachable_candidates": n_unreach,
+                "long_gaps": n_gaps,
             }
             hmm_used = True
             if hmm_fallbacks["unreachable_candidates"] > 0 or hmm_fallbacks["long_gaps"] > 0:
