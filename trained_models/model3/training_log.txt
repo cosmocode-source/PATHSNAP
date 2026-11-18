@@ -1,0 +1,13 @@
+2026-11-18 15:24:34  === Random Forest (Ensemble (bagging)) | seeds [42] | table raw ===
+2026-11-18 15:24:34  python 3.12.6 on Windows-11-10.0.26200-SP0
+2026-11-18 15:24:35  [train] 208,417 points, 1,943,052 candidate rows, miss rate 0.1037, fit_include rows 1,814,286
+2026-11-18 15:24:35  [student] 19,160 points, 207,713 candidate rows, miss rate 0.0015, fit_include rows 207,713
+2026-11-18 15:24:59  seed 42 fold 0: fit    23.3s  rows 1,443,750  top1_all 0.8226  top1_in_cands 0.8270  macroF1 0.9020  ll_raw 0.1022  ll_norm 0.5482
+2026-11-18 15:25:21  seed 42 fold 1: fit    20.8s  rows 1,368,322  top1_all 0.8895  top1_in_cands 0.8912  macroF1 0.9379  ll_raw 0.0792  ll_norm 0.3666
+2026-11-18 15:25:45  seed 42 fold 2: fit    22.5s  rows 1,457,100  top1_all 0.5546  top1_in_cands 0.8251  macroF1 0.8136  ll_raw 0.1150  ll_norm 0.5401
+2026-11-18 15:26:07  seed 42 fold 3: fit    22.1s  rows 1,520,044  top1_all 0.7650  top1_in_cands 0.8564  macroF1 0.8938  ll_raw 0.0931  ll_norm 0.5231
+2026-11-18 15:26:28  seed 42 fold 4: fit    20.3s  rows 1,467,928  top1_all 0.7941  top1_in_cands 0.8132  macroF1 0.8923  ll_raw 0.0852  ll_norm 0.5340
+2026-11-18 15:27:00  seed 42 final fit: 27.7s on 1,814,286 rows
+2026-11-18 15:27:04  seed 42 student: top1_all 0.8447  macroF1 0.9148  ll_norm 0.4462  continuity 0.7112  inference 20.1 ms / 1,000 points
+2026-11-18 15:27:06  CV top1_all 0.7652 +/- 0.1264 | student top1_all 0.8447 | total 150.3s
+2026-11-18 15:27:06  outputs written to C:\Users\shiva\PATHSNAP\trained_models\model3
