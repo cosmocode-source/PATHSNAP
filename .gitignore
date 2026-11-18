@@ -28,3 +28,6 @@ logs/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Per-trip projected-array cache written by the preprocessing notebook
+data_preprocessing/data_preprocessing/cache/

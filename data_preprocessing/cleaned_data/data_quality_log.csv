@@ -1,0 +1,17 @@
+stage,partition,check,value
+4.2,train,exact_duplicate,0
+4.2,train,invalid_coord,0
+4.2,train,non_monotonic_ts,0
+4.2,train,stationary,1427
+4.2,train,in_hive,410
+4.2,train,after_gap,1216
+4.2,train,speed_jump,1530
+4.2,train,speed_outlier,2055
+4.2,student_test,exact_duplicate,0
+4.2,student_test,invalid_coord,0
+4.2,student_test,non_monotonic_ts,0
+4.2,student_test,stationary,80
+4.2,student_test,in_hive,43
+4.2,student_test,after_gap,44
+4.2,student_test,speed_jump,8
+4.2,student_test,speed_outlier,53

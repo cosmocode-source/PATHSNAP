@@ -1,0 +1,20 @@
+{
+  "seed": 42,
+  "gap_seconds": 5.0,
+  "impossible_speed_mps": 50.0,
+  "mad_z_threshold": 5.0,
+  "hive_radius_m": 5.0,
+  "hive_min_points": 10,
+  "stationary_step_m": 1.0,
+  "align_sigma_m": 10.0,
+  "align_emission_cap_m": 50.0,
+  "align_stay_cost": 0.0,
+  "align_advance_cost": 1.0,
+  "align_skip_cost": 3.0,
+  "align_base_skip": 3,
+  "align_arcs_per_second": 2.0,
+  "align_gap_skip_cost": 0.1,
+  "far_label_m": 30.0,
+  "ambiguity_margin_m": 5.0,
+  "chunk_cells": 2000000
+}
