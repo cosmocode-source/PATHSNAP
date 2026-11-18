@@ -2,8 +2,8 @@
  * PathSnap Evaluator UI Configuration.
  */
 
-// Default local backend URL (overridden by localStorage or UI input)
-export const DEFAULT_API_URL = "http://localhost:8000";
+// Default backend URL (overridden by localStorage or UI input)
+export const DEFAULT_API_URL = "https://febriferous-unfudged-antonietta.ngrok-free.dev";
 
 // Storage key for remembered URL
 export const STORAGE_KEY_API_URL = "pathsnap_api_url";
