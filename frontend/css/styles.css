@@ -61,6 +61,15 @@ body {
 .map-unavailable { display:grid; place-items:center; padding:28px; color:var(--text-secondary); text-align:center; }
 button:focus-visible, select:focus-visible, input:focus-visible { outline:2px solid var(--accent-teal); outline-offset:3px; }
 @media (max-width: 680px) { .page-intro { align-items:flex-start; flex-direction:column; } .intro-key { margin-left:-8px; } }
+@media (max-width: 540px) {
+  .api-url-center { display:grid; grid-template-columns:1fr 1fr; }
+  .api-url-center .input-text { grid-column:1 / -1; min-width:0; }
+  .top-bar { position:relative; padding:14px 16px; }
+  .status-section { align-self:flex-start; }
+  .connection-detail { text-align:left; }
+  .control-card-inner { flex-wrap:wrap; }
+  .bars-grid { grid-template-columns:minmax(0, 1fr); }
+}
 
 /* ==============================================================================
    Top Navigation Bar
