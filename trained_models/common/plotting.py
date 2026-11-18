@@ -64,11 +64,13 @@ def plot_reliability(tables: dict[str, pd.DataFrame], title: str, path: Path) ->
 def plot_loss_curves(histories: dict[str, dict], title: str, ylabel: str, path: Path) -> None:
     """Real training / validation loss histories. ``histories[name] = {"train": [...], "val": [...]}`` (either optional)."""
     fig, ax = plt.subplots(figsize=(7, 4.2))
-    for name, h in histories.items():
+    colors = plt.get_cmap("tab10").colors
+    for i, (name, h) in enumerate(histories.items()):
+        c = colors[i % len(colors)]            # one colour per run: dashed = train, solid = validation
         if h.get("train") is not None:
-            ax.plot(np.arange(1, len(h["train"]) + 1), h["train"], ls="--", lw=1, label=f"{name} train")
+            ax.plot(np.arange(1, len(h["train"]) + 1), h["train"], ls="--", lw=1, color=c, label=f"{name} train")
         if h.get("val") is not None:
-            ax.plot(np.arange(1, len(h["val"]) + 1), h["val"], lw=1.3, label=f"{name} validation")
+            ax.plot(np.arange(1, len(h["val"]) + 1), h["val"], lw=1.3, color=c, label=f"{name} validation")
     ax.set_xlabel("iteration / epoch")
     ax.set_ylabel(ylabel)
     ax.set_title(title, fontsize=9)
@@ -101,6 +103,13 @@ def plot_model_bars(df: pd.DataFrame, cols: list[str], title: str, ylabel: str, 
     ax.set_title(title, fontsize=10)
     ax.legend(fontsize=8)
     vals = df[cols].to_numpy(float)
+    lo = vals.copy()
+    hi = vals.copy()
+    if err:                                   # keep the whole error bar inside the axis
+        for j, c in enumerate(cols):
+            if c in err:
+                lo[:, j] -= df[err[c]].to_numpy(float)
+                hi[:, j] += df[err[c]].to_numpy(float)
     if np.nanmin(vals) > 0.5:
-        ax.set_ylim(np.nanmin(vals) - 0.05, min(1.0, np.nanmax(vals) + 0.03))
+        ax.set_ylim(max(0.0, np.nanmin(lo) - 0.03), min(1.0, np.nanmax(hi) + 0.03))
     _save(fig, path)

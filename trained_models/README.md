@@ -45,6 +45,7 @@ and rebuilt exactly from the raw train table and `scaler.joblib` with `pathsnap_
 | `common/metrics.py` | Top-1, Macro F1, log loss (raw and normalised per point), candidate miss rate, route continuity, Brier score / ECE, per-trip Top-1. |
 | `common/plotting.py` | Shared plots (fold bars, confusion matrices, calibration, real loss curves, per-trip bars, comparison bars). |
 | `common/experiment.py` | The common harness: CV, final fit, student evaluation, timing and every output file. |
+| `common/redraw_loss_curves.py` | Redraws the LightGBM / MLP loss-curve figures from the saved real histories (style changes only, no retraining). |
 | `model1/` | Logistic Regression (class-weighted, L2), scaled table |
 | `model2/` | KNN (distance-weighted, fitted on a seeded 150k-row subsample), scaled table |
 | `model3/` | Random Forest (depth and leaf size capped), raw table |
@@ -115,4 +116,4 @@ All metrics are unweighted: each point or row counts once. Sample weights only a
 
 The primary metric is CV Top-1 on all points, with log loss as the tie-breaker. Fold stability, inference speed,
 probability quality for the HMM (normalised log loss, calibration) and model size are also weighed. The justification
-is in `comparison/model_comparison.ipynb`.
+is in `comparison/model_comparison.ipynb`. A CV Top-1 difference smaller than the seed-to-seed spread measured for the MLP (std of its CV Top-1 over 3 seeds) counts as a tie.
