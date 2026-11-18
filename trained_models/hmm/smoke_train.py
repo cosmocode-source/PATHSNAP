@@ -27,7 +27,7 @@ for trip_id in sizes.index[:3]:
     part = table[table.trip_id == trip_id].reset_index(drop=True)
     trip = load_trip(ROOT / 'Dataset', 'train', trip_id)
     scores = model.predict(part[feature_list()], num_threads=2)
-    out = decode_trip(part, scores, trip, trip.gps_xy, trip.gps_t, cfg)
+    out = decode_trip(part[['gps_row', 'arc_id']], scores, trip, trip.gps_xy, trip.gps_t, cfg)
     results.append({'trip_id': trip_id, 'n_points': len(trip.gps_t), **out['diagnostics']})
     print(results[-1], flush=True)
 outdir = Path(__file__).parent / 'results'

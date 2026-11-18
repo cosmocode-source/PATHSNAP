@@ -11,6 +11,12 @@ def decode_trip(candidates, probs, network, gps_xy, times, config):
     carried forward and raises ValueError; later missing points retain the last arc.
     """
     started = time.perf_counter()
+    # Refuse common evaluation-only columns even though decoding does not use
+    # them, so callers cannot accidentally pass route-derived labels.
+    forbidden = {'label', 'label_arc_id', 'label_quality', 'label_in_candidates',
+                 'sample_weight', 'fit_include', 'reference_route', 'route'}
+    if forbidden.intersection(candidates.columns):
+        raise ValueError('decoder candidates must not include reference or label columns')
     xy, times = np.asarray(gps_xy, float), np.asarray(times, float)
     probs = np.asarray(probs, float)
     rows = candidates['gps_row'].to_numpy(dtype=int)

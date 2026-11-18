@@ -30,6 +30,12 @@ def test_no_route_argument():
     assert 'route' not in inspect.signature(decode_trip).parameters
 
 
+def test_label_columns_are_rejected(cfg):
+    candidates = pd.DataFrame({'gps_row': [0], 'arc_id': [0], 'label': [1]})
+    with pytest.raises(ValueError, match='label columns'):
+        decode_trip(candidates, [1.], network(), [[1., 0.]], [0.], cfg)
+
+
 def test_unreachable_break_and_determinism(cfg):
     args = ([[0], [3]], [1., 1.], [[1, 0], [1001, 0]], [0, 1], cfg)
     a, b = call(*args), call(*args)

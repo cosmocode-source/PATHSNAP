@@ -1,0 +1,31 @@
+{
+  "train": {
+    "top1_all": {
+      "classifier_trip_mean": 0.8361440883781028,
+      "hmm_trip_mean": 0.813560938714757,
+      "paired_difference": -0.022583149663345962,
+      "bootstrap_95_ci": [
+        -0.041382943081815365,
+        -0.004104676650509268
+      ]
+    },
+    "top1_in_candidates": {
+      "classifier_trip_mean": 0.8501454363302621,
+      "hmm_trip_mean": 0.8259397470929727,
+      "paired_difference": -0.024205689237289538,
+      "bootstrap_95_ci": [
+        -0.042924735694837714,
+        -0.006500800497438871
+      ]
+    },
+    "continuity": {
+      "classifier_trip_mean": 0.7404602614366006,
+      "hmm_trip_mean": 0.844281119410784,
+      "paired_difference": 0.10382085797418342,
+      "bootstrap_95_ci": [
+        0.08154944083809577,
+        0.12858508502220603
+      ]
+    }
+  }
+}
