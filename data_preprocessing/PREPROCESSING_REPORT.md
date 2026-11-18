@@ -97,10 +97,10 @@ Mean candidates per point: 9.3 (train), 10.8 (student).
 | 30 m | 5.3 | 12.4% | 0% | 0% | 100% |
 | 50 m | 9.0 | 11.1% | 0% | 0% | 89.9% |
 | 100 m | 22.4 | 10.2% | 0% | 0% | 82.1% |
-| **Final scheme** | 9.3 | 10.2% | 0% | 0% | 82.3% |
+| **Final scheme** | 9.3 | 10.4% | 0% | 0% | 83.8% |
 
 Caveat: clean and ambiguous labels are, by definition, at most 30 m from their point, so their 0% at radii of 30 m and above is not an independent result.
-Far points cause the whole remaining miss rate (21,222 far points have no candidate that is their label arc). Student-test miss rate (descriptive only): 0.15% overall,
+Far points cause the whole remaining miss rate (21,620 far points have no candidate that is their label arc; the cap on candidates per point costs about 400 far points compared with 100 m alone). Student-test miss rate (descriptive only): 0.15% overall,
 clean 0%, ambiguous 0%, far 19.5% (29 of 149 far points). Decision: keep 50 m / 100 m fallback / K = 5 / cap 50.
 
 ### 4.5 Features (route-free), 26 candidates
@@ -110,12 +110,12 @@ temporal context (distance of previous / next fixes and a +/- 3 window to the sa
 No NaN or inf. Network distance between consecutive candidates is deliberately not computed (HMM stage).
 The reverse-twin flag fires on 76.3% (train) / 74.9% (student) of candidate pairs, confirming that most roads appear as opposite-direction pairs.
 
-### 4.5b Feature decisions (usable train rows: 187,195 points / 1,943,052 pairs in total)
-Class balance on usable rows: 10.3% positive (one per 9.7 rows); class weights from train 0.557 / 4.851.
+### 4.5b Feature decisions (usable train rows: 186,797 points; 1,943,052 candidate pairs in total)
+Class balance on usable rows: 10.3% positive (one per 9.7 rows); class weights from train 0.557 / 4.856.
 
 | Decision | Features | Evidence |
 |---|---|---|
-| Drop (4) | `heading_cos` | |Spearman| 1.00 with `heading_diff_abs` (monotone function), equal AUC edge |
+| Drop (4) | `heading_diff_abs` | |Spearman| 1.00 with `heading_cos` (monotone function), equal AUC edge, so the positively oriented `heading_cos` is kept |
 | | `is_two_way` | |Spearman| 0.999 with `is_reverse_twin` |
 | | `gap_len_s` | |Spearman| 1.00 with `after_gap`; skew 229 |
 | | `in_hive` | 99.8% one value, AUC edge below 0.02 |
@@ -128,7 +128,7 @@ Mild collinearity (VIF above 10): `dist_m` 10.6, `mean_dist_win_m` 11.9 (matters
 ### 4.6 Scaling, weights, folds (training only)
 - Raw table (trees) and scaled table (linear / MLP / distance): winsorise at train 1st / 99th percentile, log1p on 2 features, StandardScaler fitted on usable train rows, 5 binary flags pass through (22 selected features: 17 continuous + 5 binary).
 - Sample weights (train points): clean 1.0 (168,566), ambiguous 0.5 (14,055), far 0.3 (25,796); student always 1.
-- 21,222 train points (all far) have no positive row; they stay in the table with `fit_include = False` and must be filtered when fitting (count logged and tested). Student rows are never excluded.
+- 21,620 train points (all far) have no positive row; they stay in the table with `fit_include = False` and must be filtered when fitting (count logged and tested). Student rows are never excluded.
 - Folds: GroupKFold by `trip_id`, 5 folds, seed 42, 16 trips each; student rows have fold -1.
 
 ## 5. Outputs
@@ -154,13 +154,14 @@ index-space and projection round-trip checks; arc geometry lookup; every point (
 the scaled table is reproducible from the raw one.
 
 ## 7. Limitations and open issues
+0. **Cross-machine determinism (fixed after a teammate's check):** two arcs of the same street at the same distance used to swap rank on a different machine because of float noise. Candidates are now ordered by distance rounded to 1 mm, then arc_id; the rank and flag features are asserted to match exactly across machines, other features to a small tolerance. Run `pytest test_pipeline.py` on the API laptop too.
 1. **Reference-route coverage.** 12.4% of train labels are far, mostly from three trips. Models are trained with those points down-weighted or excluded; evaluation on student-test is on all points and clean-only (descriptive). Headline numbers may be pulled down on any trip whose reference route is incomplete.
 2. **Student ambiguity is higher than train** (17.3% vs 6.7% ambiguous), probably because of more road-dense or looping routes; it affects how clean the student labels are, not the pipeline.
 3. **Speed-jump flag** fires on legitimate motorway speeds; do not use it as an error filter.
-4. **Heading features are redundant by construction** (`heading_diff_abs` and its cosine); only one is kept.
+4. **Heading features are redundant by construction** (`heading_diff_abs` and its cosine); only `heading_cos` is kept (the tie is broken by orientation, deterministically).
 5. **Sampling effect:** trips with a step longer than the typical arc cannot have every route arc observed; labels cannot be recovered for skipped arcs, which is expected.
 6. **Repository size:** `train_candidates.parquet` is 81 MB (above GitHub's 50 MB recommendation, below the 100 MB limit). If it becomes a problem, move it to Git LFS or split it by fold.
-7. **The EDA outputs** (`outputs/`) are git-ignored and not in the repo; the EDA thresholds were taken from its notebook config cell.
+7. **The EDA outputs** (`outputs/`) are git-ignored; a committed copy (tables, figures, Folium map) regenerated from the EDA notebook is in `data_analytics/eda_outputs/`.
 8. The EDA README's numbers come from the lead's pilot trips; where they differ from ours (for example 5.5 candidates per point at 50 m, pilot of 3 trips, vs 9.0 over all 80 trips), ours are measured on all 80.
 
 ## 8. What is next
