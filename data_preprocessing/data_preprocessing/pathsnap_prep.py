@@ -435,6 +435,9 @@ def save_config(cfg: dict, path: Path) -> None:
 # --------------------------------------------------------------------------------------
 # 4.4 Candidate generation (ROUTE-FREE: sees only GPS + the trip's own network)
 # --------------------------------------------------------------------------------------
+SORT_DECIMALS = 3   # distances are rounded to 1 mm ONLY for ordering candidates (ties -> lower arc_id); stored distances stay exact.
+
+
 def pair_geometry(trip: Trip, gps_rows: np.ndarray, arc_ids: np.ndarray):
     """Exact point-to-segment distance (m) and projection fraction for aligned (gps_row, arc_id) pairs.
 
@@ -478,7 +481,7 @@ def nearest_k_arcs(trip: Trip, rows: np.ndarray, k: int) -> tuple[np.ndarray, np
     idx = np.atleast_2d(idx).reshape(len(rows), -1)                 # (n, kk) arc_id shortlist
     rr = np.repeat(rows, idx.shape[1]); aa = idx.ravel()
     d, _ = pair_geometry(trip, rr, aa)
-    order = np.lexsort((d, rr))                                     # by point, then distance
+    order = np.lexsort((aa, np.round(d, SORT_DECIMALS), rr))        # by point, then distance (rounded), then arc_id
     rr, aa, d = rr[order], aa[order], d[order]
     first = np.searchsorted(rr, rr, side="left")                    # start index of each point's block
     keep = (np.arange(len(rr)) - first) < k
@@ -518,7 +521,9 @@ def generate_candidates(trip: Trip, rows: np.ndarray | None = None, cfg: dict = 
             source[none] = "nearest_k"
 
     d, t = pair_geometry(trip, r1, a1)
-    order = np.lexsort((a1, d, r1))                                        # point, then distance, then arc_id (deterministic)
+    # Sort key: distance ROUNDED to 1 mm, then arc_id. Opposite-direction twins of one street are at the same distance up to
+    # float noise (~1e-13 m) that differs between CPUs / BLAS builds; rounding makes the rank identical on every machine.
+    order = np.lexsort((a1, np.round(d, SORT_DECIMALS), r1))
     r1, a1, d, t = r1[order], a1[order], d[order], t[order]
     first = np.searchsorted(r1, r1, side="left")
     rank = np.arange(len(r1)) - first                                      # 0 = nearest candidate of that point

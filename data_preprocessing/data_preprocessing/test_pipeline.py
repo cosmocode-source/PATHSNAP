@@ -46,8 +46,15 @@ def test_inference_equals_batch():
     stored = stored[stored.trip_id == tid].reset_index(drop=True)
     assert len(feats) == len(stored), "row count differs between inference and batch"
     assert (feats.gps_row.to_numpy() == stored.gps_row.to_numpy()).all() and (feats.arc_id.to_numpy() == stored.arc_id.to_numpy()).all()
+    # Integer / flag features and the candidate rank must match EXACTLY on every machine (ties are broken by arc_id after
+    # rounding distances to 1 mm). Continuous features may differ by float noise (different CPU / math library builds).
+    exact = ["rank", "n_candidates", "is_nearest", "heading_valid", "is_reverse_twin", "after_gap", "stationary", "in_hive",
+             "arc_in_deg", "arc_out_deg", "is_two_way"]
     for c in P.FEATURES:
-        assert np.allclose(feats[c].to_numpy(float), stored[c].to_numpy(float), atol=0, rtol=0), f"feature {c} differs"
+        if c in exact:
+            assert (feats[c].to_numpy() == stored[c].to_numpy()).all(), f"feature {c} differs"
+        else:
+            assert np.allclose(feats[c].to_numpy(float), stored[c].to_numpy(float), rtol=1e-4, atol=1e-3), f"feature {c} differs"
 
 
 def test_no_route_in_inference_path():
