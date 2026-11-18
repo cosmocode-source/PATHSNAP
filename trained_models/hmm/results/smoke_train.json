@@ -6,9 +6,9 @@
     "break_points": [],
     "n_gap_relaxed_steps": 46,
     "n_unreachable_pairs": 10220,
-    "n_points_changed": 82,
+    "n_points_changed": 72,
     "n_missing_candidates": 0,
-    "decode_seconds": 0.3040554999897722
+    "decode_seconds": 0.27894540000124834
   },
   {
     "trip_id": "00000039",
@@ -17,9 +17,9 @@
     "break_points": [],
     "n_gap_relaxed_steps": 45,
     "n_unreachable_pairs": 8011,
-    "n_points_changed": 55,
+    "n_points_changed": 53,
     "n_missing_candidates": 0,
-    "decode_seconds": 0.18410390001372434
+    "decode_seconds": 0.1812369000108447
   },
   {
     "trip_id": "00000018",
@@ -28,8 +28,8 @@
     "break_points": [],
     "n_gap_relaxed_steps": 0,
     "n_unreachable_pairs": 28335,
-    "n_points_changed": 17,
+    "n_points_changed": 16,
     "n_missing_candidates": 0,
-    "decode_seconds": 0.2764805000042543
+    "decode_seconds": 0.29795489998650737
   }
 ]
