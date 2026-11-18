@@ -1,5 +1,14 @@
 # PathSnap - GPS map matching and route reconstruction
 
+## Team 23
+
+| USN | Name |
+|---|---|
+| PES1UG24CS078 | Archana Shivakumar |
+| PES1UG24CS079 | Arin Singh |
+| PES1UG24CS120 | Catherine D |
+| PES1UG24CS121 | Ch Yashwitha |
+
 ![Layered PathSnap map: GPS observations, reference route, classifier route, and decoded HMM route](docs/images/route-reference-vs-hmm.png)
 
 **Layered route output.** The interactive map keeps the **reference route** (green, ground truth) and the **final HMM-predicted route** (teal) as separate overlays, together with raw GPS fixes (blue) and the classifier-only route (amber). This makes route-quality improvements inspectable instead of hiding them behind a single score. Open the [interactive map example](trained_models/hmm/maps/train_clean_00000003.html) to toggle the layers.
@@ -209,14 +218,7 @@ pytest -q
 - [HMM configuration](trained_models/hmm/config.json) and [interactive route maps](trained_models/hmm/maps/)
 - [Backend setup and REST endpoints](backend/README.md) and [frontend usage](frontend/README.md)
 
-## Team 23
 
-| USN | Name |
-|---|---|
-| PES1UG24CS078 | Archana Shivakumar |
-| PES1UG24CS079 | Arin Singh |
-| PES1UG24CS120 | Catherine D |
-| PES1UG24CS121 | Ch Yashwitha |
 
 ---
 
