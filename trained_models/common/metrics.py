@@ -23,6 +23,18 @@ Definitions
   consecutive repeats, and count the consecutive pairs (a, b) where arc a ends at the node where arc b starts
   (to_node(a) == from_node(b) in that trip's own road network). Reported pooled over all pairs and as a per-trip mean.
 * Calibration: Brier score and expected calibration error (ECE, 10 equal-width bins) of the raw probabilities.
+* Accuracy, precision, recall, F1 per class: candidate level at the same top-1 decision (top candidate of each point =
+  1, others = 0), from the confusion matrix [[TN, FP], [FN, TP]].
+    - accuracy is dominated by the ~90% negative candidates (predicting "0" everywhere already scores ~0.9), so it is
+      reported for completeness only.
+    - precision_1 = TP / points = top1_all and recall_1 = TP / points with a positive = top1_in_cands (each point gets
+      exactly one "1"); they are reported under their own names as the guidelines ask.
+* Sequence-level performance (route as a sequence): per trip, the predicted sequence is the top-1 arc of every point in
+  GPS order with consecutive repeats collapsed; the reference sequence is the aligned label arc of every point in GPS
+  order (points table), repeats collapsed. With LCS = length of their longest common subsequence:
+  seq_precision = LCS / len(predicted), seq_recall = LCS / len(reference), seq_f1 = 2 LCS / (len(pred) + len(ref)).
+  Reported pooled over trips (sums of LCS and lengths) and as a per-trip mean of seq_f1. Flicker between arcs adds
+  wrong arcs to the predicted sequence (lower precision); missed arcs lower recall.
 """
 from __future__ import annotations
 
@@ -81,6 +93,7 @@ def evaluate(keys: pd.DataFrame, y: np.ndarray, score: np.ndarray) -> dict:
 
     cm = confusion_matrix(y, pred, labels=[0, 1])
     return {
+        **classification_from_counts(*cm.ravel()),
         "n_points": int(n_pts),
         "n_rows": int(len(y)),
         "top1_all": float(hit.mean()),
@@ -92,6 +105,20 @@ def evaluate(keys: pd.DataFrame, y: np.ndarray, score: np.ndarray) -> dict:
         "brier": float(np.mean((p - y) ** 2)),
         "ece": expected_calibration_error(y, p),
         "confusion_matrix": cm.tolist(),                        # [[TN, FP], [FN, TP]] at the top-1 decision
+    }
+
+
+def classification_from_counts(tn, fp, fn, tp) -> dict:
+    """Accuracy, precision, recall and F1 of both classes from confusion-matrix counts (top-1 decision)."""
+    tn, fp, fn, tp = (float(v) for v in (tn, fp, fn, tp))
+    div = lambda a, b: a / b if b else float("nan")
+    p1, r1 = div(tp, tp + fp), div(tp, tp + fn)
+    p0, r0 = div(tn, tn + fn), div(tn, tn + fp)
+    f1 = lambda p, r: div(2 * p * r, p + r)
+    return {
+        "accuracy": div(tp + tn, tn + fp + fn + tp),
+        "precision_1": p1, "recall_1": r1, "f1_1": f1(p1, r1),
+        "precision_0": p0, "recall_0": r0, "f1_0": f1(p0, r0),
     }
 
 
@@ -142,6 +169,57 @@ def per_trip_top1(keys: pd.DataFrame, y, score, label_quality) -> pd.DataFrame:
                                   miss_rate=("in_cands", lambda s: 1 - s.mean()), far_share=("far", "mean"))
     hit_in = df[df.in_cands].groupby("trip_id")["hit"].mean().rename("top1_in_cands")
     return g.join(hit_in).reset_index()
+
+
+def _collapse(seq: np.ndarray) -> np.ndarray:
+    """Drop consecutive repeats: [5, 5, 7, 7, 5] -> [5, 7, 5]."""
+    return seq[np.r_[True, seq[1:] != seq[:-1]]] if len(seq) else seq
+
+
+def lcs_length(a: np.ndarray, b: np.ndarray) -> int:
+    """Length of the longest common subsequence of two integer sequences.
+
+    Row-by-row dynamic programme: L[i][j] = max(L[i-1][j], L[i][j-1], L[i-1][j-1] + [a_i == b_j]). With
+    t[j] = max(L[i-1][j], L[i-1][j-1] + match), the row is L[i] = cumulative max of t, which numpy does in one call.
+    """
+    if len(a) == 0 or len(b) == 0:
+        return 0
+    if len(a) < len(b):
+        a, b = b, a                                       # loop over the longer one, vectorise the shorter
+    prev = np.zeros(len(b) + 1, dtype=np.int32)
+    for x in a:
+        t = prev.copy()
+        t[1:] = np.maximum(prev[1:], prev[:-1] + (b == x))
+        prev = np.maximum.accumulate(t)
+    return int(prev[-1])
+
+
+def sequence_metrics(keys: pd.DataFrame, score, points: pd.DataFrame) -> dict:
+    """Sequence-level agreement between the classifier-only route and the reference (aligned label) arc sequence.
+
+    ``points`` = points table of the same split (trip_id, gps_row, label_arc_id).
+    """
+    pid = point_ids(keys)
+    top = top_rows(np.asarray(score, float), pid)
+    pred = keys.iloc[top][["trip_id", "gps_row", "arc_id"]]
+    ref = points[["trip_id", "gps_row", "label_arc_id"]]
+    m = ref.merge(pred, on=["trip_id", "gps_row"], how="left", validate="one_to_one")
+    assert m["arc_id"].notna().all(), "every reference point needs a prediction"
+    per_trip, L = {}, np.zeros(3)
+    for trip_id, g in m.sort_values(["trip_id", "gps_row"]).groupby("trip_id", sort=True):
+        p = _collapse(g["arc_id"].to_numpy(np.int64))
+        r = _collapse(g["label_arc_id"].to_numpy(np.int64))
+        lcs = lcs_length(p, r)
+        per_trip[trip_id] = {"len_pred": int(len(p)), "len_ref": int(len(r)), "lcs": lcs,
+                             "seq_precision": lcs / len(p), "seq_recall": lcs / len(r),
+                             "seq_f1": 2 * lcs / (len(p) + len(r))}
+        L += (lcs, len(p), len(r))
+    return {
+        "seq_precision": L[0] / L[1], "seq_recall": L[0] / L[2], "seq_f1": 2 * L[0] / (L[1] + L[2]),
+        "seq_f1_trip_mean": float(np.mean([v["seq_f1"] for v in per_trip.values()])),
+        "pred_to_ref_length_ratio": L[1] / L[2],
+        "per_trip": per_trip,
+    }
 
 
 @lru_cache(maxsize=None)

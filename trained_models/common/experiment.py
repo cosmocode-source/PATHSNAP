@@ -35,9 +35,11 @@ import pandas as pd
 
 from . import plotting
 from .data_loading import (SEED, CandidateData, feature_list, fit_mask, load_candidates, load_points)
-from .metrics import evaluate_with_clean, per_trip_top1, reliability_table, route_continuity
+from .metrics import evaluate_with_clean, per_trip_top1, reliability_table, route_continuity, sequence_metrics
 
-METRIC_KEYS = ["top1_all", "top1_in_cands", "macro_f1", "logloss_raw", "logloss_norm", "brier", "ece"]
+METRIC_KEYS = ["top1_all", "top1_in_cands", "macro_f1", "logloss_raw", "logloss_norm", "brier", "ece",
+               "accuracy", "precision_1", "recall_1", "f1_1", "precision_0", "recall_0", "f1_0"]
+SEQ_KEYS = ["seq_precision", "seq_recall", "seq_f1", "seq_f1_trip_mean", "pred_to_ref_length_ratio"]
 WEAK_TRIP_TOP1 = 0.80     # per-trip Top-1 below this is flagged as a weak trip in the per-trip plots/tables
 
 
@@ -153,6 +155,7 @@ def _run_one_seed(spec: ModelSpec, train: CandidateData, student: CandidateData,
     oof_res = evaluate_with_clean(train.keys, train.y, oof, train.label_quality)
     oof_cont = route_continuity(train.keys, oof, "train")
     oof_trip = per_trip_top1(train.keys, train.y, oof, train.label_quality)
+    oof_seq = sequence_metrics(train.keys, oof, load_points("train"))
 
     # ---- 2) final fit on all training rows (fit_include) ---------------------------------------------------------
     all_idx = fit_mask(train, folds)
@@ -173,6 +176,7 @@ def _run_one_seed(spec: ModelSpec, train: CandidateData, student: CandidateData,
     student_res = evaluate_with_clean(student.keys, student.y, p_student, student.label_quality)
     student_cont = route_continuity(student.keys, p_student, "student")
     student_trip = per_trip_top1(student.keys, student.y, p_student, student.label_quality)
+    student_seq = sequence_metrics(student.keys, p_student, load_points("student"))
     n_student_points = student_res["all"]["n_points"]
     log.info(f"seed {seed} student: top1_all {student_res['all']['top1_all']:.4f}  macroF1 {student_res['all']['macro_f1']:.4f}  "
              f"ll_norm {student_res['all']['logloss_norm']:.4f}  continuity {student_cont['pooled']:.4f}  "
@@ -190,6 +194,10 @@ def _run_one_seed(spec: ModelSpec, train: CandidateData, student: CandidateData,
             "cv_oof": {k: oof_cont[k] for k in ("pooled", "trip_mean", "n_pairs")},
             "student": {k: student_cont[k] for k in ("pooled", "trip_mean", "n_pairs")},
         },
+        "sequence_level": {
+            "cv_oof": {k: oof_seq[k] for k in SEQ_KEYS},
+            "student": {k: student_seq[k] for k in SEQ_KEYS},
+        },
         "timing": {
             "cv_fit_seconds_per_fold": [round(s, 2) for s in cv_fit_s],
             "final_fit_seconds": round(final_fit_s, 2),
@@ -202,6 +210,8 @@ def _run_one_seed(spec: ModelSpec, train: CandidateData, student: CandidateData,
         "fold_df": fold_df, "histories": histories, "saved": saved,
         "oof": oof, "p_student": p_student, "oof_trip": oof_trip, "student_trip": student_trip,
         "oof_cont_trip": oof_cont["per_trip"], "student_cont_trip": student_cont["per_trip"],
+        "oof_seq_trip": {t: v["seq_f1"] for t, v in oof_seq["per_trip"].items()},
+        "student_seq_trip": {t: v["seq_f1"] for t, v in student_seq["per_trip"].items()},
     }
     return result, extras
 
@@ -268,8 +278,10 @@ def run_experiment(spec: ModelSpec) -> dict:
         e = extras_by_seed[s]
         a = e["oof_trip"].assign(partition="train_cv_oof", seed=s)
         a["route_continuity"] = a.trip_id.map(e["oof_cont_trip"])
+        a["seq_f1"] = a.trip_id.map(e["oof_seq_trip"])
         b = e["student_trip"].assign(partition="student", seed=s)
         b["route_continuity"] = b.trip_id.map(e["student_cont_trip"])
+        b["seq_f1"] = b.trip_id.map(e["student_seq_trip"])
         trips += [a, b]
     trips_df = pd.concat(trips, ignore_index=True)
     trips_df["weak_trip"] = trips_df["top1_all"] < WEAK_TRIP_TOP1

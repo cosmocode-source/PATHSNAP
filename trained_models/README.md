@@ -56,6 +56,7 @@ and rebuilt exactly from the raw train table and `scaler.joblib` with `pathsnap_
 | `common/metrics.py` | Top-1, Macro F1, log loss (raw and normalised per point), candidate miss rate, route continuity, Brier score / ECE, per-trip Top-1. |
 | `common/plotting.py` | Shared plots (fold bars, confusion matrices, calibration, real loss curves, per-trip bars, comparison bars). |
 | `common/experiment.py` | The common harness: CV, final fit, student evaluation, timing and every output file. |
+| `common/add_missing_metrics.py` | Adds accuracy, precision, recall, per-class F1 and student sequence-level metrics to saved results without retraining (verified against the saved confusion matrices). |
 | `common/redraw_loss_curves.py` | Redraws the LightGBM / MLP loss-curve figures from the saved real histories (style changes only, no retraining). |
 | `model1/` | Logistic Regression (class-weighted, L2), scaled table |
 | `model2/` | KNN (distance-weighted, fitted on a seeded 150k-row subsample), scaled table |
@@ -117,6 +118,20 @@ All metrics are unweighted: each point or row counts once. Sample weights only a
   begins in that trip's network. It is reported pooled and as a per-trip mean. Reading `Dataset/<split>/<trip>/<trip>.arcs`
   for this metric is the one, agreed exception to "no Dataset/ for modelling".
 - **Calibration.** Brier score and ECE (10 equal-width bins) of the raw probabilities, plus a reliability plot.
+- **Accuracy, precision, recall, F1 per class.** These are candidate-level metrics at the same top-1 decision, taken
+  from the confusion matrix `[[TN, FP], [FN, TP]]`. Accuracy is dominated by the roughly 90% negative candidates, so it
+  is reported only for completeness. Each point gets exactly one predicted "1", so precision of class 1 equals
+  `top1_all` and recall of class 1 equals `top1_in_cands`.
+- **Sequence-level performance.** For each trip, the predicted arc sequence (top-1 arc per point, repeats collapsed) is
+  compared with the reference arc sequence (aligned label per point, repeats collapsed) using their longest common
+  subsequence (LCS). Sequence precision is LCS divided by the predicted length, recall is LCS divided by the reference
+  length, and F1 is 2·LCS divided by the sum of both lengths. These are reported pooled over trips and as a per-trip
+  mean.
+- **Metrics added after the first run.** Accuracy, precision, recall, per-class F1 and the student sequence-level
+  metrics were added to the first run's `results.json` by `common/add_missing_metrics.py`, from that run's saved
+  outputs and without retraining. Every derived confusion matrix and Macro F1 is checked against the saved ones. CV
+  sequence-level metrics are N/A for that run because its out-of-fold predictions were not saved; later runs of the
+  harness compute them directly.
 - **CV.** Mean and standard deviation over the 5 folds, on all points (headline) and on clean points only
   (`label_quality == clean`, diagnostic).
 - **Student-test.** All points are the headline and clean-only points are a diagnostic.
