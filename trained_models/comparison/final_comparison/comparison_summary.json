@@ -1,0 +1,228 @@
+{
+  "metrics": {
+    "train_S1": {
+      "macro_f1": 0.893865438872494,
+      "logloss_norm": 0.43261395336234343,
+      "top1_all": 0.7673414356794311,
+      "top1_in_candidates": 0.8561540067559972,
+      "top1_clean": 0.8811504099284553,
+      "miss_rate": 0.10373434028893991,
+      "continuity_trip_mean": 0.7404602614366006,
+      "arc_precision_vs_reference_trip_mean": 0.6389584563395869,
+      "arc_recall_vs_reference_trip_mean": 0.8859622586591595,
+      "arc_f1_vs_reference_trip_mean": 0.7062124645446863,
+      "length_mismatch_vs_reference_trip_mean": 1.7462955931818822,
+      "broken_transitions": 14608,
+      "cv_top1_all_mean": 0.7732893592776108,
+      "cv_top1_all_std": 0.1290672836086063,
+      "cv_top1_in_candidates_mean": 0.8514470942778047,
+      "cv_top1_in_candidates_std": 0.036139682030543456
+    },
+    "train_S2": {
+      "macro_f1": 0.8941499290708452,
+      "logloss_norm": 0.4264116131606815,
+      "top1_all": 0.7678260410619095,
+      "top1_in_candidates": 0.8566947006643576,
+      "top1_clean": 0.8820106071212462,
+      "miss_rate": 0.10373434028893991,
+      "continuity_trip_mean": 0.7505704397935097,
+      "arc_precision_vs_reference_trip_mean": 0.6465419338877906,
+      "arc_recall_vs_reference_trip_mean": 0.888358157927265,
+      "arc_f1_vs_reference_trip_mean": 0.712749638378747,
+      "length_mismatch_vs_reference_trip_mean": 1.6865463976121213,
+      "broken_transitions": 13789,
+      "cv_top1_all_mean": 0.7736609191551411,
+      "cv_top1_all_std": 0.12889124609290303,
+      "cv_top1_in_candidates_mean": 0.8519574978117571,
+      "cv_top1_in_candidates_std": 0.037464386332602725
+    },
+    "student_S1": {
+      "macro_f1": 0.9252192273039752,
+      "logloss_norm": 0.4017670592207756,
+      "top1_all": 0.8635699373695198,
+      "top1_in_candidates": 0.8648789922115937,
+      "top1_clean": 0.8848187551761483,
+      "miss_rate": 0.0015135699373695077,
+      "continuity_trip_mean": 0.7567711154577841,
+      "arc_precision_vs_reference_trip_mean": 0.6570441253601804,
+      "arc_recall_vs_reference_trip_mean": 0.8869545759571691,
+      "arc_f1_vs_reference_trip_mean": 0.730455482501241,
+      "length_mismatch_vs_reference_trip_mean": 0.8677266452914519,
+      "broken_transitions": 1334
+    },
+    "student_S2": {
+      "macro_f1": 0.9251904599361368,
+      "logloss_norm": 0.38288736575561294,
+      "top1_all": 0.863517745302714,
+      "top1_in_candidates": 0.8648267210286968,
+      "top1_clean": 0.8848187551761483,
+      "miss_rate": 0.0015135699373695077,
+      "continuity_trip_mean": 0.7672200413437544,
+      "arc_precision_vs_reference_trip_mean": 0.6674172939246749,
+      "arc_recall_vs_reference_trip_mean": 0.8890432076945778,
+      "arc_f1_vs_reference_trip_mean": 0.7380340527735236,
+      "length_mismatch_vs_reference_trip_mean": 0.8070181927154392,
+      "broken_transitions": 1233
+    },
+    "train_S3": {
+      "macro_f1": 0.8727314788900185,
+      "logloss_norm": null,
+      "top1_all": 0.7313414932563083,
+      "top1_in_candidates": 0.8159874087913618,
+      "top1_clean": 0.8375057840845722,
+      "miss_rate": 0.10373434028893991,
+      "continuity_trip_mean": 0.844281119410784,
+      "arc_precision_vs_reference_trip_mean": 0.7739330745654105,
+      "arc_recall_vs_reference_trip_mean": 0.9048797878035609,
+      "arc_f1_vs_reference_trip_mean": 0.8111230276152377,
+      "length_mismatch_vs_reference_trip_mean": 0.39739729676667135,
+      "broken_transitions": 6553,
+      "points_changed": 35344,
+      "breaks": 189,
+      "gap_steps": 1216,
+      "decode_seconds": 135.99499170013587,
+      "decode_ms_per_1000": 652.5139105741656,
+      "largest_trip": {
+        "trip_id": "00000054",
+        "points": 19313,
+        "seconds": 7.959966800000984
+      },
+      "cv_top1_all_mean": 0.7378998707334967,
+      "cv_top1_all_std": 0.13479589635195302,
+      "cv_top1_in_candidates_mean": 0.8104692697786877,
+      "cv_top1_in_candidates_std": 0.041891999603786485,
+      "hard_decision_logloss_norm": 6.355569741603273
+    },
+    "student_S3": {
+      "macro_f1": 0.917624642194627,
+      "logloss_norm": null,
+      "top1_all": 0.8497912317327766,
+      "top1_in_candidates": 0.8510793999268204,
+      "top1_clean": 0.8593361788876855,
+      "miss_rate": 0.0015135699373695077,
+      "continuity_trip_mean": 0.8567977994917021,
+      "arc_precision_vs_reference_trip_mean": 0.8136202903808749,
+      "arc_recall_vs_reference_trip_mean": 0.8997498640009537,
+      "arc_f1_vs_reference_trip_mean": 0.8367030958726552,
+      "length_mismatch_vs_reference_trip_mean": 0.24850097831181403,
+      "broken_transitions": 656,
+      "points_changed": 2246,
+      "breaks": 0,
+      "gap_steps": 44,
+      "decode_seconds": 13.68705789995147,
+      "decode_ms_per_1000": 714.3558402897427,
+      "largest_trip": {
+        "trip_id": "00000056",
+        "points": 3958,
+        "seconds": 2.3913914999866392
+      },
+      "hard_decision_logloss_norm": 5.143535306523482
+    }
+  },
+  "paired": {
+    "train_S2_minus_S1": {
+      "top1_all": {
+        "mean_trip_difference": 0.0018067897456338273,
+        "ci95": [
+          0.00017139494851172184,
+          0.0033986226781052543
+        ],
+        "n_trips": 80
+      },
+      "top1_in_candidates": {
+        "mean_trip_difference": 0.0019312663373479727,
+        "ci95": [
+          0.00031183439377540674,
+          0.003580549840925208
+        ],
+        "n_trips": 80
+      },
+      "continuity": {
+        "mean_trip_difference": 0.010110178356909149,
+        "ci95": [
+          0.006159122086333979,
+          0.013906879064083564
+        ],
+        "n_trips": 80
+      }
+    },
+    "train_S3_minus_S1": {
+      "top1_all": {
+        "mean_trip_difference": -0.02258314966334596,
+        "ci95": [
+          -0.04138750147547543,
+          -0.005608582930030685
+        ],
+        "n_trips": 80
+      },
+      "top1_in_candidates": {
+        "mean_trip_difference": -0.024205689237289538,
+        "ci95": [
+          -0.04382213675522489,
+          -0.005602815215735923
+        ],
+        "n_trips": 80
+      },
+      "continuity": {
+        "mean_trip_difference": 0.10382085797418342,
+        "ci95": [
+          0.08283570759546885,
+          0.12811614955700645
+        ],
+        "n_trips": 80
+      }
+    },
+    "student_S2_minus_S1": {
+      "top1_all": {
+        "mean_trip_difference": 0.0017690787017421883,
+        "ci95": [
+          -0.0014643746773050266,
+          0.004857853833941545
+        ],
+        "n_trips": 10
+      },
+      "top1_in_candidates": {
+        "mean_trip_difference": 0.0017695564793151041,
+        "ci95": [
+          -0.0013366548604581885,
+          0.004808693721934911
+        ],
+        "n_trips": 10
+      },
+      "continuity": {
+        "mean_trip_difference": 0.01044892588597036,
+        "ci95": [
+          -0.0022386788573394616,
+          0.02016889492843865
+        ],
+        "n_trips": 10
+      }
+    },
+    "student_S3_minus_S1": {
+      "top1_all": {
+        "mean_trip_difference": 0.0014130478411179981,
+        "ci95": [
+          -0.02723994113043406,
+          0.020423578630469834
+        ],
+        "n_trips": 10
+      },
+      "top1_in_candidates": {
+        "mean_trip_difference": 0.0014327748738961477,
+        "ci95": [
+          -0.027500865302797866,
+          0.020718759333520992
+        ],
+        "n_trips": 10
+      },
+      "continuity": {
+        "mean_trip_difference": 0.1000266840339179,
+        "ci95": [
+          0.061214008908828096,
+          0.1359377577850198
+        ],
+        "n_trips": 10
+      }
+    }
+  }
+}
