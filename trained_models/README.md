@@ -21,7 +21,18 @@ py -3.12 -m venv .venv
 
 ## How to run
 
-Run each script from the `trained_models` folder. Each script runs CV, the final fit and the student evaluation, then
+**All five models in one terminal (demo).** From the repository root:
+
+```powershell
+.venv\Scripts\python trained_models\run_all_models.py
+```
+
+This runs model1 to model5 one after another with live output. When they finish, it prints one summary table of
+all five models, read from their `results.json` files, and the model the selection rule picks. Options:
+`--models 1 4` trains only those models; `--summary-only` prints the table of saved results without training.
+Re-running overwrites each model's outputs.
+
+**One model at a time.** Run each script from the `trained_models` folder. Each script runs CV, the final fit and the student evaluation, then
 writes all of its outputs into its own folder.
 
 ```powershell
