@@ -16,5 +16,7 @@
   "align_gap_skip_cost": 0.1,
   "far_label_m": 30.0,
   "ambiguity_margin_m": 5.0,
+  "weight_far": 0.3,
+  "weight_ambiguous": 0.5,
   "chunk_cells": 2000000
 }

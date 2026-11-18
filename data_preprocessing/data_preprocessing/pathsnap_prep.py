@@ -57,6 +57,11 @@ CONFIG = {
     "align_gap_skip_cost": 0.1,       # skip cost per arc right after a long gap (position is unknown).
     "far_label_m": 30.0,              # label farther than this from its GPS point = 'far' quality.
     "ambiguity_margin_m": 5.0,        # [EDA] best vs next-best route arc closer than this = 'ambiguous'.
+                                      # Re-checked on train: ~ the median label distance (4.8 m) = one typical GPS error.
+    # far_label_m = 30 re-checked: it is the p99 label distance of well-covered train trips (29.4 m).
+    # ---- sample weights (TRAIN only; team-lead decision; student rows always weight 1) ----
+    "weight_far": 0.3,                # far labels: reference route may not cover the point -> trust less.
+    "weight_ambiguous": 0.5,          # ambiguous labels: label arc is geometrically tied with another route arc.
     # ---- paths -------------------------------------------------------------------
     "chunk_cells": 2_000_000,         # max (points x route arcs) cells per distance chunk (memory guard).
 }

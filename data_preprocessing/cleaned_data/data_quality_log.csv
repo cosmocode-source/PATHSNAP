@@ -1,17 +1,21 @@
-stage,partition,check,value
-4.2,train,exact_duplicate,0
-4.2,train,invalid_coord,0
-4.2,train,non_monotonic_ts,0
-4.2,train,stationary,1427
-4.2,train,in_hive,410
-4.2,train,after_gap,1216
-4.2,train,speed_jump,1530
-4.2,train,speed_outlier,2055
-4.2,student_test,exact_duplicate,0
-4.2,student_test,invalid_coord,0
-4.2,student_test,non_monotonic_ts,0
-4.2,student_test,stationary,80
-4.2,student_test,in_hive,43
-4.2,student_test,after_gap,44
-4.2,student_test,speed_jump,8
-4.2,student_test,speed_outlier,53
+stage,partition,item,value,note
+4.2,train,exact_duplicate,0.0,flag count
+4.2,train,invalid_coord,0.0,flag count
+4.2,train,non_monotonic_ts,0.0,flag count
+4.2,train,stationary,1427.0,flag count
+4.2,train,in_hive,410.0,flag count
+4.2,train,after_gap,1216.0,flag count
+4.2,train,speed_jump,1530.0,flag count
+4.2,train,speed_outlier,2055.0,flag count
+4.2,student_test,exact_duplicate,0.0,flag count
+4.2,student_test,invalid_coord,0.0,flag count
+4.2,student_test,non_monotonic_ts,0.0,flag count
+4.2,student_test,stationary,80.0,flag count
+4.2,student_test,in_hive,43.0,flag count
+4.2,student_test,after_gap,44.0,flag count
+4.2,student_test,speed_jump,8.0,flag count
+4.2,student_test,speed_outlier,53.0,flag count
+4.3,train,far_points_train,25796.0,top-3 trips hold 87.2%; 23195 are > 50 m (reference route does not cover the track)
+4.3,train,far_label_m,30.0,p99 label distance of well-covered train trips = 29.4 m
+4.3,train,ambiguity_margin_m,5.0,median label distance of well-covered train trips = 4.8 m (one typical GPS error)
+4.3,train,network_checks,90.0,"isolated-node trips=0, route-discontinuity trips=11, mean two-way arc share=0.922"
