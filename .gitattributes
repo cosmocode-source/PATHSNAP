@@ -1,0 +1,6 @@
+# Model files must be stored and checked out byte-for-byte. Git's Windows line-ending conversion (core.autocrlf)
+# turns LightGBM's LF text model into CRLF on checkout, and LightGBM then fails to load it.
+*lightgbm*.txt -text
+*.joblib binary
+*.pt binary
+*.parquet binary
