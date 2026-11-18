@@ -92,6 +92,7 @@ for p in ('train','student'):
         v=paired[p+'_'+key]['top1_all']; ci=v['ci95']
         lines.append(f"| {p} | {label} | {v['mean_trip_difference']:+.4f} | [{ci[0]:+.4f}, {ci[1]:+.4f}] | {verdict(ci)} |")
     lines.append(f'| {p} | HMM on tuned (S4 − S2) | NOT RUN | NOT RUN | NOT RUN |')
+    lines.append(f'| {p} | Tuned HMM vs untuned HMM (S4 − S3) | NOT RUN | NOT RUN | NOT RUN |')
     lines.append(f'| {p} | Tuning + HMM (S4 − S1) | NOT RUN | NOT RUN | NOT RUN |')
 lines += ['', '### Additional paired bootstrap intervals', '', '| Partition | Comparison | Metric | Mean trip difference | 95% CI |', '|---|---|---|---:|---|']
 for p in ('train','student'):

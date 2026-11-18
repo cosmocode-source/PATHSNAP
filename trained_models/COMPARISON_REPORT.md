@@ -54,10 +54,12 @@ The table uses a paired bootstrap of the **mean per-trip** top-1 difference; it 
 | train | Tuning (S2 − S1) | +0.0018 | [+0.0002, +0.0034] | real gain |
 | train | HMM on untuned (S3 − S1) | -0.0226 | [-0.0414, -0.0056] | worse |
 | train | HMM on tuned (S4 − S2) | NOT RUN | NOT RUN | NOT RUN |
+| train | Tuned HMM vs untuned HMM (S4 − S3) | NOT RUN | NOT RUN | NOT RUN |
 | train | Tuning + HMM (S4 − S1) | NOT RUN | NOT RUN | NOT RUN |
 | student | Tuning (S2 − S1) | +0.0018 | [-0.0015, +0.0049] | within noise |
 | student | HMM on untuned (S3 − S1) | +0.0014 | [-0.0272, +0.0204] | within noise |
 | student | HMM on tuned (S4 − S2) | NOT RUN | NOT RUN | NOT RUN |
+| student | Tuned HMM vs untuned HMM (S4 − S3) | NOT RUN | NOT RUN | NOT RUN |
 | student | Tuning + HMM (S4 − S1) | NOT RUN | NOT RUN | NOT RUN |
 
 ### Additional paired bootstrap intervals
