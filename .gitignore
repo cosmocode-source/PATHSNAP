@@ -37,3 +37,6 @@ data_preprocessing/data_preprocessing/cache/
 
 # Large derived table (77 MB): exactly rebuilt from the raw train table + scaler.joblib with pathsnap_prep.scale_features
 data_preprocessing/cleaned_data/model_data/train_candidates_scaled.parquet
+
+# Evaluator/demo trips must remain local: they are not part of training, tuning, or the public submission.
+evaluator_test/

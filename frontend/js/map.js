@@ -44,15 +44,16 @@ export class TripMap {
       attributionControl: false,
     });
 
-    // Dark styled basemap (CartoDB Dark Matter with OSM fallback)
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+    // OpenStreetMap is used directly so the map never depends on a CARTO API key.
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       className: "dark-map-tiles",
+      attribution: "&copy; OpenStreetMap contributors",
     }).addTo(this.map);
 
     // Attribution
     L.control.attribution({ position: "bottomright", prefix: false })
-      .addAttribution('&copy; <a href="https://carto.com/" target="_blank">CARTO</a>, &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>')
+      .addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors')
       .addTo(this.map);
 
     this.renderLayers(resultData);
